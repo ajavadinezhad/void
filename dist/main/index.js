@@ -141,7 +141,11 @@ class MainProcess {
         electron_1.ipcMain.handle('db:get-accounts', () => this.databaseService.getAccounts());
         electron_1.ipcMain.handle('db:add-account', (_, account) => this.databaseService.addAccount(account));
         electron_1.ipcMain.handle('db:update-account', (_, account) => this.databaseService.updateAccount(account));
-        electron_1.ipcMain.handle('db:delete-account', (_, id) => this.databaseService.deleteAccount(id));
+        electron_1.ipcMain.handle('db:delete-account', async (_, id) => {
+            const result = await this.databaseService.deleteAccount(id);
+            this.mainWindow?.webContents.send('data:event', { type: 'account:deleted', accountId: id });
+            return result;
+        });
         electron_1.ipcMain.handle('db:get-folders', (_, accountId) => this.databaseService.getFolders(accountId));
         electron_1.ipcMain.handle('db:get-messages', (_, folderId, limit, offset) => this.databaseService.getMessages(folderId, limit, offset));
         electron_1.ipcMain.handle('db:get-message', (_, id) => this.databaseService.getMessage(id));
@@ -152,9 +156,21 @@ class MainProcess {
         electron_1.ipcMain.handle('db:update-all-folder-counts', (_, accountId) => this.databaseService.updateAllFolderCounts(accountId));
         electron_1.ipcMain.handle('db:clear-messages-for-account', (_, accountId) => this.databaseService.clearMessagesForAccount(accountId));
         // Email operations
-        electron_1.ipcMain.handle('email:sync-folder', (_, accountId, folderId) => this.emailService.syncFolder(accountId, folderId));
-        electron_1.ipcMain.handle('email:sync-all-folders', (_, accountId) => this.emailService.syncAllFolders(accountId));
-        electron_1.ipcMain.handle('email:refresh-folders', (_, accountId) => this.emailService.refreshFolders(accountId));
+        electron_1.ipcMain.handle('email:sync-folder', async (_, accountId, folderId) => {
+            await this.emailService.syncFolder(accountId, folderId);
+            this.mainWindow?.webContents.send('data:event', { type: 'emails:synced', accountId, folderId });
+            return true;
+        });
+        electron_1.ipcMain.handle('email:sync-all-folders', async (_, accountId) => {
+            await this.emailService.syncAllFolders(accountId);
+            this.mainWindow?.webContents.send('data:event', { type: 'emails:all-synced', accountId });
+            return true;
+        });
+        electron_1.ipcMain.handle('email:refresh-folders', async (_, accountId) => {
+            await this.emailService.refreshFolders(accountId);
+            this.mainWindow?.webContents.send('data:event', { type: 'folders:refreshed', accountId });
+            return true;
+        });
         electron_1.ipcMain.handle('email:send-message', (_, message) => this.emailService.sendMessage(message));
         electron_1.ipcMain.handle('email:test-connection', (_, account) => this.emailService.testConnection(account));
         // OAuth operations
@@ -184,6 +200,7 @@ class MainProcess {
             }
         });
         electron_1.ipcMain.handle('window:close', () => this.mainWindow?.close());
+        electron_1.ipcMain.handle('window:reload', () => this.mainWindow?.reload());
         // App operations
         electron_1.ipcMain.handle('app:relaunch', () => {
             electron_1.app.relaunch();

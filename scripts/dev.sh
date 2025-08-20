@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Voida Development Script
+# Void Development Script
 # This script builds the project, kills any running processes, and starts the dev server
 
-echo "🚀 Voida Development Script"
+echo "🚀 Void Development Script"
 echo "=========================="
 
 # Function to check if a command exists
@@ -27,7 +27,7 @@ kill_processes() {
     pkill -f "vite" 2>/dev/null || true
     
     # Kill node processes (be more careful with this)
-    pkill -f "node.*voida" 2>/dev/null || true
+    pkill -f "node.*void" 2>/dev/null || true
     
     echo "✅ Processes killed"
 }
@@ -69,7 +69,7 @@ start_dev() {
 
 # Main execution
 main() {
-    echo "Starting Voida development workflow..."
+    echo "Starting Void development workflow..."
     echo ""
     
     # Kill existing processes

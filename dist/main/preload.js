@@ -45,4 +45,9 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     onUpdateEvent: (cb) => {
         electron_1.ipcRenderer.on('updates:event', (_evt, payload) => cb(payload));
     },
+    onDataEvent: (cb) => {
+        const listener = (_evt, payload) => cb(payload);
+        electron_1.ipcRenderer.on('data:event', listener);
+        return () => electron_1.ipcRenderer.removeListener('data:event', listener);
+    },
 });

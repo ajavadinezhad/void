@@ -58,6 +58,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateEvent: (cb: (payload: any) => void) => {
     ipcRenderer.on('updates:event', (_evt, payload) => cb(payload));
   },
+  onDataEvent: (cb: (payload: any) => void) => {
+    const listener = (_evt: Electron.IpcRendererEvent, payload: any) => cb(payload);
+    ipcRenderer.on('data:event', listener);
+    return () => ipcRenderer.removeListener('data:event', listener);
+  },
 });
 
 // Type definitions for the exposed API
@@ -109,6 +114,7 @@ declare global {
       downloadUpdate: () => Promise<any>;
       quitAndInstall: () => Promise<any>;
       onUpdateEvent: (cb: (payload: any) => void) => void;
+      onDataEvent: (cb: (payload: any) => void) => () => void;
     };
   }
 }

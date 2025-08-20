@@ -120,7 +120,11 @@ class MainProcess {
     ipcMain.handle('db:get-accounts', () => this.databaseService.getAccounts());
     ipcMain.handle('db:add-account', (_, account) => this.databaseService.addAccount(account));
     ipcMain.handle('db:update-account', (_, account) => this.databaseService.updateAccount(account));
-    ipcMain.handle('db:delete-account', (_, id) => this.databaseService.deleteAccount(id));
+    ipcMain.handle('db:delete-account', async (_, id) => {
+      const result = await this.databaseService.deleteAccount(id);
+      this.mainWindow?.webContents.send('data:event', { type: 'account:deleted', accountId: id });
+      return result;
+    });
 
     ipcMain.handle('db:get-folders', (_, accountId) => this.databaseService.getFolders(accountId));
     ipcMain.handle('db:get-messages', (_, folderId, limit, offset) => 
@@ -135,12 +139,21 @@ class MainProcess {
     ipcMain.handle('db:clear-messages-for-account', (_, accountId) => this.databaseService.clearMessagesForAccount(accountId));
 
     // Email operations
-    ipcMain.handle('email:sync-folder', (_, accountId, folderId) => 
-      this.emailService.syncFolder(accountId, folderId));
-    ipcMain.handle('email:sync-all-folders', (_, accountId) => 
-      this.emailService.syncAllFolders(accountId));
-    ipcMain.handle('email:refresh-folders', (_, accountId) => 
-      this.emailService.refreshFolders(accountId));
+    ipcMain.handle('email:sync-folder', async (_, accountId, folderId) => {
+      await this.emailService.syncFolder(accountId, folderId);
+      this.mainWindow?.webContents.send('data:event', { type: 'emails:synced', accountId, folderId });
+      return true;
+    });
+    ipcMain.handle('email:sync-all-folders', async (_, accountId) => {
+      await this.emailService.syncAllFolders(accountId);
+      this.mainWindow?.webContents.send('data:event', { type: 'emails:all-synced', accountId });
+      return true;
+    });
+    ipcMain.handle('email:refresh-folders', async (_, accountId) => {
+      await this.emailService.refreshFolders(accountId);
+      this.mainWindow?.webContents.send('data:event', { type: 'folders:refreshed', accountId });
+      return true;
+    });
     ipcMain.handle('email:send-message', (_, message) => this.emailService.sendMessage(message));
     ipcMain.handle('email:test-connection', (_, account) => this.emailService.testConnection(account));
 
@@ -174,6 +187,7 @@ class MainProcess {
       }
     });
     ipcMain.handle('window:close', () => this.mainWindow?.close());
+    ipcMain.handle('window:reload', () => this.mainWindow?.reload());
     
     // App operations
     ipcMain.handle('app:relaunch', () => {

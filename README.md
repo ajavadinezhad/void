@@ -1,6 +1,6 @@
-# Voida - Modern Email Client
+# Void - Modern Email Client
 
-A modern, cross-platform email client built with Electron, React, and TypeScript. Voida provides a secure, fast, and feature-rich email experience with support for multiple accounts, AI-powered features, and offline access.
+A modern, cross-platform email client built with Electron, React, and TypeScript. Void provides a secure, fast, and feature-rich email experience with support for multiple accounts, AI-powered features, and offline access.
 
 ## Features
 
@@ -42,7 +42,7 @@ The application features a modern three-pane layout:
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd voida
+   cd void
    ```
 
 2. **Install dependencies:**
@@ -114,7 +114,7 @@ The application features a modern three-pane layout:
 ## Project Structure
 
 ```
-voida/
+void/
 ├── src/
 │   ├── main/                 # Electron main process
 │   │   ├── index.ts         # Main process entry point

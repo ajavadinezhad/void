@@ -9,7 +9,7 @@ export class DatabaseService {
 
   constructor() {
     const userDataPath = this.getUserDataPath();
-    this.dbPath = path.join(userDataPath, 'voida.db');
+    this.dbPath = path.join(userDataPath, 'void.db');
   }
 
   private getUserDataPath(): string {

@@ -44,7 +44,7 @@ class DatabaseService {
     constructor() {
         this.db = null;
         const userDataPath = this.getUserDataPath();
-        this.dbPath = path.join(userDataPath, 'voida.db');
+        this.dbPath = path.join(userDataPath, 'void.db');
     }
     getUserDataPath() {
         const { app } = require('electron');

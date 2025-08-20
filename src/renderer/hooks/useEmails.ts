@@ -117,6 +117,32 @@ export function useEmails() {
     return fetchEmails(accountId, folderId, true); // Reset and fetch first page
   };
 
+  useEffect(() => {
+    const unsubscribe = window.electronAPI.onDataEvent(async (payload: any) => {
+      try {
+        if (payload?.type === 'emails:synced' || payload?.type === 'emails:all-synced') {
+          if (currentAccountId) {
+            await fetchEmails(currentAccountId, currentFolderId, true);
+          }
+        } else if (payload?.type === 'folders:refreshed') {
+          if (currentAccountId) {
+            await fetchEmails(currentAccountId, currentFolderId, true);
+          }
+        } else if (payload?.type === 'account:deleted') {
+          // Clear local state when an account is deleted
+          setEmails([]);
+          setHasMore(false);
+          setOffset(0);
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [currentAccountId, currentFolderId]);
+
   return {
     emails,
     loading,
