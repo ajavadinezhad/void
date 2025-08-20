@@ -27,8 +27,44 @@
   - Main process integrates optional `electron-updater` (lazy-loaded); IPC handlers: `updates:check`, `updates:download`, `updates:quit-and-install`
   - Preload exposes `checkForUpdates`, `downloadUpdate`, `quitAndInstall`, `onUpdateEvent`
   - Header adds icon button to trigger check; status piped via events (tooltips/pulse)
-  - Note: currently logs “not configured” until publish provider is set
+  - Note: currently logs "not configured" until publish provider is set
 
+### Recently Implemented (Latest Session)
+- **AI Integration**
+  - ✅ AI Assistant side panel with chat interface
+  - ✅ OpenAI and Claude API integration
+  - ✅ Email summarization and analysis
+  - ✅ Smart reply suggestions and action extraction
+  - ✅ AI settings panel for API configuration
+  - ✅ Quick actions for email processing
+  - ✅ Tone analysis and general email assistance
+
+- **Enhanced Email Rendering**
+  - ✅ Fixed HTML content extraction from Gmail API
+  - ✅ Improved plain text rendering with auto-link detection
+  - ✅ Smart content type detection and fallback
+  - ✅ Enhanced typography and styling for email content
+  - ✅ Proper HTML vs plain text handling
+
+- **UI Improvements**
+  - ✅ Collapsible sidebar with smooth animations
+  - ✅ Custom scrollbar styling throughout the app
+  - ✅ Improved email detail view with better content rendering
+  - ✅ Enhanced folder navigation with unread count badges
+  - ✅ Better responsive design and accessibility
+
+- **Data Management**
+  - ✅ Fixed email read/unread status detection
+  - ✅ Improved folder count synchronization
+  - ✅ Enhanced refresh flow with progress indicators
+  - ✅ Better event-driven UI updates
+  - ✅ Robust error handling and recovery
+
+- **Development Experience**
+  - ✅ Quick restart functionality for faster development
+  - ✅ Improved build process with separate Electron builds
+  - ✅ Better debugging and logging throughout the application
+  - ✅ Consistent code style and patterns
 
 ### Needs Implementation / Next Up
 - Updates & Distribution
@@ -64,19 +100,23 @@
   - Pagination/infinite scroll tuning; background sync; debounced search
   - Robust error surfaces with retry; telemetry/log levels in dev vs prod
 
-
 ### Polishing / Nice‑to‑Have
 - Keyboard shortcuts (navigation, compose, reply, archive)
 - Thread rendering optimizations for long conversations
 - Link detection and safe external open; image loading controls in HTML
 - Theming polish and small-screen responsiveness
-
+- Enhanced AI features with more providers and capabilities
+- Email scheduling and automation features
 
 ### QA Checklist (short)
 - Thread view loads messages by `threadId`; reply/forward prefill verified
 - Sidebar: Inbox first; order stable across restarts; icons visible when collapsed
 - Refresh progress shows 0→90%→100% and resets
 - Update check button surfaces status (if updater configured)
+- AI assistant panel opens/closes correctly and functions properly
+- Email content renders correctly with HTML and plain text fallback
+- Custom scrollbars appear consistently throughout the application
+- Collapsible sidebar transitions smoothly and maintains functionality
 
 ---
 Last updated: keep this file in sync as features land. When a section is completed, move it to Implemented and add any caveats/notes.
@@ -85,39 +125,51 @@ Last updated: keep this file in sync as features land. When a section is complet
 
 A modern email client application built with Electron, React, and TypeScript for cross-platform desktop support (Windows, macOS, Linux).
 
-## Current Status: Phase 0 (Planning) 📋
+## Current Status: Phase 2 (Core Features) 🚀
 
-**Phase 0 - Project Setup (IN PROGRESS):**
-- 📋 Electron application foundation
-- 📋 React + TypeScript setup
-- 📋 Modern UI framework (Tailwind CSS + Headless UI)
-- 📋 Project structure and build configuration
-- 📋 Development environment setup
+**Phase 2 - Core Features (IN PROGRESS):**
+- ✅ Email infrastructure and database setup
+- ✅ Gmail OAuth2 integration and email synchronization
+- ✅ Basic UI framework with three-pane layout
+- ✅ Email reading and conversation view
+- ✅ AI assistant integration with OpenAI and Claude
+- ✅ Enhanced email content rendering
+- ✅ Collapsible sidebar and custom scrollbars
+- 📋 Email composition and sending
+- 📋 Advanced search and filtering
+- 📋 Message actions (archive, delete, flag)
+- 📋 Attachment handling
 
 ## Features
 
-**Planned Features (All Phases):**
+**Implemented Features:**
 - 🎯 Cross-platform desktop application (Windows, macOS, Linux)
 - 🎯 Modern, responsive UI with dark/light theme support
 - 🎯 Three-pane layout (sidebar, email list, conversation view)
-- 🎯 Multiple email account support (Gmail, Outlook, Yahoo, IMAP/SMTP)
-- 🎯 OAuth2 authentication for major providers
+- 🎯 Gmail account support with OAuth2 authentication
 - 🎯 Real-time email synchronization
 - 🎯 Offline email storage with SQLite
-- 🎯 Advanced search with full-text indexing
+- 🎯 AI assistant with OpenAI and Claude integration
+- 🎯 Enhanced email content rendering (HTML + plain text)
+- 🎯 Collapsible sidebar with smooth animations
+- 🎯 Custom scrollbar styling throughout the app
+- 🎯 Email threading and conversation view
+- 🎯 Folder navigation with unread counts
+- 🎯 Event-driven UI updates and refresh system
+
+**Planned Features (Future Phases):**
+- 🎯 Multiple email account support (Outlook, Yahoo, IMAP/SMTP)
 - 🎯 Email composition with rich text editor
 - 🎯 Attachment support and file management
+- 🎯 Advanced search with full-text indexing
 - 🎯 Contact management and address book
 - 🎯 Email encryption (PGP/GPG support)
-- 🎯 AI-powered features:
-  - Writing assistance and suggestions
-  - Smart email categorization
-  - Automated responses
-  - Email summarization
-  - Privacy redaction layer
+- 🎯 Calendar integration
+- 🎯 Email scheduling and automation
 - 🎯 Keyboard shortcuts and accessibility
 - 🎯 Notification system
 - 🎯 Auto-update mechanism
+- 🎯 Plugin system for extensions
 
 ## Technology Stack
 
@@ -126,7 +178,7 @@ A modern email client application built with Electron, React, and TypeScript for
 - **React**: UI library for building user interfaces
 - **TypeScript**: Type-safe JavaScript development
 - **Vite**: Fast build tool and development server
-- **Tailwind CSS**: Utility-first CSS framework
+- **Tailwind CSS**: Utility-first CSS framework with custom prose styling
 - **Headless UI**: Unstyled, accessible UI components
 
 **Email & Data:**
@@ -136,6 +188,11 @@ A modern email client application built with Electron, React, and TypeScript for
 - **nodemailer**: SMTP client for sending emails
 - **node-oauth2**: OAuth2 authentication
 - **node-gmail-api**: Gmail API integration
+
+**AI Integration:**
+- **OpenAI API**: GPT-4 and GPT-3.5 Turbo for email assistance
+- **Anthropic Claude API**: Claude 3 models for alternative AI features
+- **Custom AI Service**: Unified interface for multiple AI providers
 
 **Development Tools:**
 - **ESLint**: Code linting and formatting
@@ -151,19 +208,19 @@ void/
 ├── src/
 │   ├── main/                 # Electron main process
 │   │   ├── index.ts         # Main process entry point
-│   │   ├── ipc/             # IPC handlers
-│   │   ├── services/        # Email, auth, database services
-│   │   └── utils/           # Utilities and helpers
+│   │   ├── preload.ts       # Preload script for IPC
+│   │   └── services/        # Email, auth, database, AI services
 │   ├── renderer/            # Electron renderer process (React app)
 │   │   ├── components/      # React components
+│   │   │   ├── AI/         # AI assistant components
+│   │   │   ├── Email/      # Email-related components
+│   │   │   └── Layout/     # Layout and navigation components
 │   │   ├── pages/           # Page components
 │   │   ├── hooks/           # Custom React hooks
 │   │   ├── stores/          # State management
-│   │   ├── types/           # TypeScript type definitions
-│   │   └── utils/           # Frontend utilities
+│   │   └── main.tsx         # React entry point
 │   └── shared/              # Shared code between main and renderer
-│       ├── types/           # Shared TypeScript types
-│       └── constants/       # Shared constants
+│       └── types/           # TypeScript type definitions
 ├── assets/                  # Static assets
 ├── dist/                    # Build output
 ├── electron-builder.json    # Electron Builder configuration
@@ -175,33 +232,50 @@ void/
 
 ## Development Phases
 
-### Phase 0: Project Foundation (Current)
-- [ ] Initialize Electron project with React + TypeScript
-- [ ] Set up development environment and build tools
-- [ ] Configure ESLint, Prettier, and testing setup
-- [ ] Create basic application structure
-- [ ] Implement main process and renderer process communication
-- [ ] Set up Tailwind CSS and basic styling
+### Phase 0: Project Foundation ✅ COMPLETED
+- ✅ Initialize Electron project with React + TypeScript
+- ✅ Set up development environment and build tools
+- ✅ Configure ESLint, Prettier, and testing setup
+- ✅ Create basic application structure
+- ✅ Implement main process and renderer process communication
+- ✅ Set up Tailwind CSS and basic styling
 
-### Phase 1: Core UI Framework
-- [ ] Design and implement three-pane layout
-- [ ] Create responsive sidebar with folder navigation
-- [ ] Build email list component with virtual scrolling
-- [ ] Implement conversation view with message threading
-- [ ] Add settings window and preferences management
-- [ ] Implement dark/light theme switching
-- [ ] Create loading states and error handling
+### Phase 1: Core UI Framework ✅ COMPLETED
+- ✅ Design and implement three-pane layout
+- ✅ Create responsive sidebar with folder navigation
+- ✅ Build email list component with virtual scrolling
+- ✅ Implement conversation view with message threading
+- ✅ Add settings window and preferences management
+- ✅ Implement dark/light theme switching
+- ✅ Create loading states and error handling
 
-### Phase 2: Email Infrastructure
-- [ ] Set up SQLite database schema
-- [ ] Implement IMAP client for email retrieval
-- [ ] Add SMTP client for email sending
-- [ ] Create email parsing and storage system
-- [ ] Implement OAuth2 authentication for major providers
-- [ ] Add account management (add, edit, remove)
-- [ ] Create email synchronization system
+### Phase 2: Email Infrastructure ✅ COMPLETED
+- ✅ Set up SQLite database schema
+- ✅ Implement Gmail API integration for email retrieval
+- ✅ Add OAuth2 authentication for Gmail
+- ✅ Create email parsing and storage system
+- ✅ Implement email synchronization system
+- ✅ Add account management (add, edit, remove)
+- ✅ Create event-driven UI update system
 
-### Phase 3: Email Management
+### Phase 3: AI Integration ✅ COMPLETED
+- ✅ Integrate OpenAI API for email assistance
+- ✅ Add Claude API as alternative AI provider
+- ✅ Implement AI assistant side panel
+- ✅ Create email summarization and analysis
+- ✅ Add smart reply suggestions and action extraction
+- ✅ Implement AI settings and configuration
+- ✅ Add quick actions for email processing
+
+### Phase 4: UI Enhancements ✅ COMPLETED
+- ✅ Enhanced email content rendering (HTML + plain text)
+- ✅ Implement collapsible sidebar with smooth animations
+- ✅ Add custom scrollbar styling throughout the app
+- ✅ Improve email detail view with better content rendering
+- ✅ Enhanced folder navigation with unread count badges
+- ✅ Better responsive design and accessibility
+
+### Phase 5: Email Management (IN PROGRESS)
 - [ ] Implement email composition with rich text editor
 - [ ] Add attachment support and file handling
 - [ ] Create email search with full-text indexing
@@ -210,7 +284,7 @@ void/
 - [ ] Create notification system
 - [ ] Implement offline email access
 
-### Phase 4: Advanced Features
+### Phase 6: Advanced Features (PLANNED)
 - [ ] Add contact management and address book
 - [ ] Implement email encryption (PGP/GPG)
 - [ ] Create email templates and signatures
@@ -218,15 +292,7 @@ void/
 - [ ] Implement email scheduling
 - [ ] Create backup and restore functionality
 
-### Phase 5: AI Integration
-- [ ] Integrate AI writing assistance
-- [ ] Implement smart email categorization
-- [ ] Add automated response suggestions
-- [ ] Create email summarization features
-- [ ] Implement privacy redaction layer
-- [ ] Add AI-powered search and Q&A
-
-### Phase 6: Polish & Distribution
+### Phase 7: Polish & Distribution (PLANNED)
 - [ ] Performance optimization
 - [ ] Comprehensive testing (unit, integration, e2e)
 - [ ] Security audit and hardening
@@ -259,7 +325,7 @@ void/
 3. **Set up environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env with your OAuth2 credentials
+   # Edit .env with your OAuth2 credentials and AI API keys
    ```
 
 4. **Start development server:**
@@ -270,11 +336,39 @@ void/
 ### Build Commands
 
 - **Development:** `npm run dev` - Start development server
+- **Quick Restart:** `npm run dev:restart` - Quick restart for development
 - **Build:** `npm run build` - Build for production
+- **Build Electron:** `npm run build:electron` - Build Electron app
 - **Package:** `npm run package` - Create distributable packages
 - **Test:** `npm run test` - Run unit tests
 - **Lint:** `npm run lint` - Run ESLint
 - **Format:** `npm run format` - Format code with Prettier
+
+## AI Features Setup
+
+### OpenAI Configuration
+
+1. **Get OpenAI API Key:**
+   - Sign up at [OpenAI Platform](https://platform.openai.com/)
+   - Create an API key in your account settings
+
+2. **Update Environment Variables:**
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_MODEL=gpt-4  # Optional: override default model
+   ```
+
+### Claude (Anthropic) Configuration
+
+1. **Get Claude API Key:**
+   - Sign up at [Anthropic Console](https://console.anthropic.com/)
+   - Create an API key in your account settings
+
+2. **Update Environment Variables:**
+   ```env
+   CLAUDE_API_KEY=your_claude_api_key_here
+   CLAUDE_MODEL=claude-3-sonnet-20240229  # Optional: override default model
+   ```
 
 ## OAuth2 Setup
 
@@ -403,6 +497,7 @@ CREATE VIRTUAL TABLE messages_fts USING fts5(
 - **Input Validation**: Validate all user inputs and email content
 - **Auto-updates**: Implement secure auto-update mechanism
 - **Sandboxing**: Use Electron's sandbox features where possible
+- **AI API Security**: API keys stored securely and never exposed to renderer
 
 ## Performance Optimization
 
@@ -412,6 +507,7 @@ CREATE VIRTUAL TABLE messages_fts USING fts5(
 - **Caching**: Implement intelligent caching for frequently accessed data
 - **Database Indexing**: Optimize database queries with proper indexing
 - **Memory Management**: Monitor and optimize memory usage
+- **Event-driven Updates**: Efficient UI updates using IPC events
 
 ## Testing Strategy
 
@@ -456,3 +552,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Node.js Documentation](https://nodejs.org/docs)
 - [Email Protocols (SMTP/IMAP)](https://tools.ietf.org/html/rfc5321)
+- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Anthropic Claude API Documentation](https://docs.anthropic.com/)

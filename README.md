@@ -9,25 +9,35 @@ A modern, cross-platform email client built with Electron, React, and TypeScript
 - **OAuth2 Authentication**: Secure authentication for major email providers
 - **Offline Access**: Emails stored locally with SQLite database
 - **Modern UI**: Beautiful, responsive interface with dark/light themes
-- **AI Features**: Writing assistance, smart search, and email summarization
+- **AI Assistant**: Integrated AI-powered features with OpenAI and Claude support
+  - Email summarization and analysis
+  - Smart reply suggestions
+  - Action item extraction
+  - Tone analysis
+  - General email assistance
+- **Enhanced Email Rendering**: Rich HTML content with fallback to styled plain text
+- **Collapsible Sidebar**: Smart sidebar with icon-only mode and smooth transitions
+- **Custom Scrollbars**: Consistent, modern scrollbar styling throughout the app
 - **Fast Search**: Full-text search with instant results
 - **Security**: Local data storage, encrypted connections, privacy-focused
 
 ## Screenshots
 
 The application features a modern three-pane layout:
-- **Left sidebar**: Account and folder navigation
+- **Left sidebar**: Account and folder navigation (collapsible)
 - **Middle pane**: Email list with preview
-- **Right pane**: Email content viewer
+- **Right pane**: Email content viewer with AI assistant panel
 
 ## Technology Stack
 
 - **Electron**: Cross-platform desktop application framework
 - **React**: UI library for building user interfaces
 - **TypeScript**: Type-safe JavaScript development
-- **Tailwind CSS**: Utility-first CSS framework
+- **Tailwind CSS**: Utility-first CSS framework with custom prose styling
 - **SQLite**: Local database for email storage
 - **Node.js**: Backend services and email protocols
+- **OpenAI API**: AI-powered email assistance
+- **Anthropic Claude API**: Alternative AI provider for email features
 
 ## Getting Started
 
@@ -53,7 +63,7 @@ The application features a modern three-pane layout:
 3. **Set up environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env with your OAuth2 credentials
+   # Edit .env with your OAuth2 credentials and AI API keys
    ```
 
 4. **Start development server:**
@@ -64,11 +74,39 @@ The application features a modern three-pane layout:
 ### Build Commands
 
 - **Development:** `npm run dev` - Start development server
+- **Quick Restart:** `npm run dev:restart` - Quick restart for development
 - **Build:** `npm run build` - Build for production
+- **Build Electron:** `npm run build:electron` - Build Electron app
 - **Package:** `npm run package` - Create distributable packages
 - **Test:** `npm run test` - Run unit tests
 - **Lint:** `npm run lint` - Run ESLint
 - **Format:** `npm run format` - Format code with Prettier
+
+## AI Features Setup
+
+### OpenAI Configuration
+
+1. **Get OpenAI API Key:**
+   - Sign up at [OpenAI Platform](https://platform.openai.com/)
+   - Create an API key in your account settings
+
+2. **Update Environment Variables:**
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_MODEL=gpt-4  # Optional: override default model
+   ```
+
+### Claude (Anthropic) Configuration
+
+1. **Get Claude API Key:**
+   - Sign up at [Anthropic Console](https://console.anthropic.com/)
+   - Create an API key in your account settings
+
+2. **Update Environment Variables:**
+   ```env
+   CLAUDE_API_KEY=your_claude_api_key_here
+   CLAUDE_MODEL=claude-3-sonnet-20240229  # Optional: override default model
+   ```
 
 ## OAuth2 Setup
 
@@ -119,9 +157,12 @@ void/
 │   ├── main/                 # Electron main process
 │   │   ├── index.ts         # Main process entry point
 │   │   ├── preload.ts       # Preload script for IPC
-│   │   └── services/        # Email, auth, database services
+│   │   └── services/        # Email, auth, database, AI services
 │   ├── renderer/            # Electron renderer process (React app)
 │   │   ├── components/      # React components
+│   │   │   ├── AI/         # AI assistant components
+│   │   │   ├── Email/      # Email-related components
+│   │   │   └── Layout/     # Layout and navigation components
 │   │   ├── pages/           # Page components
 │   │   ├── hooks/           # Custom React hooks
 │   │   └── main.tsx         # React entry point
@@ -131,6 +172,49 @@ void/
 ├── dist/                    # Build output
 └── package.json             # Dependencies and scripts
 ```
+
+## AI Features
+
+### AI Assistant Panel
+- **Access**: Click the sparkles icon in the header to open the AI assistant
+- **Features**:
+  - Chat with AI about your emails
+  - Email summarization and analysis
+  - Smart reply suggestions
+  - Action item extraction
+  - Tone analysis
+  - General email assistance
+
+### AI Settings
+- **Configuration**: Access AI settings through the assistant panel
+- **Providers**: Support for both OpenAI and Claude APIs
+- **Models**: Configurable model selection for each provider
+- **Testing**: Built-in connection testing for API keys
+
+### Quick Actions
+- **Summarize Email**: Get a concise summary of selected email
+- **Draft Reply**: Generate contextual reply suggestions
+- **Extract Actions**: Identify action items and tasks
+- **Analyze Tone**: Understand the emotional tone of emails
+
+## UI Features
+
+### Enhanced Email Rendering
+- **HTML Support**: Rich HTML email content with proper styling
+- **Plain Text Fallback**: Styled plain text with auto-link detection
+- **Content Detection**: Smart detection of HTML vs plain text content
+- **Typography**: Improved text rendering with proper spacing and formatting
+
+### Collapsible Sidebar
+- **Toggle**: Click the sidebar toggle button to collapse/expand
+- **Icon Mode**: When collapsed, shows only folder icons with unread badges
+- **Smooth Transitions**: Animated expand/collapse with CSS transitions
+- **Tooltips**: Hover tooltips show folder names when collapsed
+
+### Custom Scrollbars
+- **Consistent Styling**: Modern, thin scrollbars throughout the application
+- **Cross-platform**: Consistent appearance on all operating systems
+- **Accessibility**: Maintains scrollbar functionality while improving aesthetics
 
 ## Development
 
@@ -161,6 +245,8 @@ void/
 - Follow ESLint and Prettier configurations
 - Write meaningful commit messages
 - Add tests for new functionality
+- Use `g_log` for logging (preferred over `log_info` or `g_info`)
+- UI handler functions should start with `uj_` prefix
 
 ## Security
 
@@ -169,6 +255,7 @@ void/
 - **Network Security**: TLS/SSL for all email communications
 - **Input Validation**: All user inputs validated
 - **Auto-updates**: Secure auto-update mechanism
+- **AI API Security**: API keys stored securely and never exposed to renderer
 
 ## Performance
 
@@ -177,6 +264,34 @@ void/
 - **Background Sync**: Emails synced in background
 - **Caching**: Intelligent caching for frequently accessed data
 - **Database Indexing**: Optimized queries with proper indexing
+- **Event-driven Updates**: Efficient UI updates using IPC events
+
+## Recent Improvements
+
+### Email Content Rendering
+- ✅ Fixed HTML content extraction from Gmail API
+- ✅ Improved plain text rendering with auto-link detection
+- ✅ Added proper content type detection and fallback
+- ✅ Enhanced typography and styling for email content
+
+### AI Integration
+- ✅ Added AI assistant side panel with chat interface
+- ✅ Implemented email summarization and analysis
+- ✅ Added smart reply suggestions and action extraction
+- ✅ Created AI settings panel for API configuration
+- ✅ Support for both OpenAI and Claude providers
+
+### UI Enhancements
+- ✅ Implemented collapsible sidebar with smooth animations
+- ✅ Added custom scrollbar styling throughout the app
+- ✅ Improved email detail view with better content rendering
+- ✅ Enhanced folder navigation with unread count badges
+
+### Data Management
+- ✅ Fixed email read/unread status detection
+- ✅ Improved folder count synchronization
+- ✅ Enhanced refresh flow with progress indicators
+- ✅ Better event-driven UI updates
 
 ## Contributing
 
@@ -210,3 +325,5 @@ For support and questions:
 - [ ] Mobile companion app
 - [ ] Cloud sync for settings
 - [ ] Plugin system for extensions
+- [ ] Enhanced AI features with more providers
+- [ ] Email scheduling and automation
