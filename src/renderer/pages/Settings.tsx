@@ -144,7 +144,7 @@ const Settings: React.FC = () => {
           Settings
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Customize your Voida experience
+          Customize your Void experience
         </p>
       </div>
 

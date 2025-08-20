@@ -1,4 +1,4 @@
-## Voida Development Plan
+## Void Development Plan
 
 ### Implemented (current session)
 - Core UX
@@ -147,7 +147,7 @@ A modern email client application built with Electron, React, and TypeScript for
 ## Project Structure
 
 ```
-voida/
+void/
 ├── src/
 │   ├── main/                 # Electron main process
 │   │   ├── index.ts         # Main process entry point
@@ -248,7 +248,7 @@ voida/
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd voida
+   cd void
    ```
 
 2. **Install dependencies:**

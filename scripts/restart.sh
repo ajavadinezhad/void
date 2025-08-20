@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Voida Quick Restart Script
+# Void Quick Restart Script
 # This script kills running processes and restarts the dev server without rebuilding
 
-echo "⚡ Voida Quick Restart"
+echo "⚡ Void Quick Restart"
 echo "====================="
 
 # Function to kill processes
@@ -40,7 +40,7 @@ start_dev() {
 
 # Main execution
 main() {
-    echo "Quick restarting Voida..."
+    echo "Quick restarting Void..."
     echo ""
     
     # Kill existing processes

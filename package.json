@@ -1,5 +1,5 @@
 {
-  "name": "voida",
+  "name": "void",
   "version": "1.0.0",
   "description": "A modern cross-platform email client built with Electron",
   "main": "dist/main/index.js",
@@ -71,8 +71,8 @@
     "zustand": "^4.4.7"
   },
   "build": {
-    "appId": "com.voida.email",
-    "productName": "Voida",
+    "appId": "com.void.email",
+    "productName": "Void",
     "directories": {
       "output": "release"
     },

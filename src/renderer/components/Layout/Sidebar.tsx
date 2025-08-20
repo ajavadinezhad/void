@@ -67,6 +67,23 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
     }
   }, [accounts]);
 
+  // Listen for data events to refresh folder counts
+  useEffect(() => {
+    const unsubscribe = window.electronAPI.onDataEvent(async (payload: any) => {
+      if (payload?.type === 'emails:synced' || payload?.type === 'emails:all-synced' || payload?.type === 'folders:refreshed') {
+        console.log('Sidebar: Refreshing folders due to data event:', payload.type);
+        await loadFolders();
+      } else if (payload?.type === 'account:deleted') {
+        console.log('Sidebar: Clearing folders due to account deletion');
+        setFolders([]);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
   // Expose refresh function globally so it can be called from other components
   useEffect(() => {
     (window as any).refreshSidebarFolders = loadFolders;

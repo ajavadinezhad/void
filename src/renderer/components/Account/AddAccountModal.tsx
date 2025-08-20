@@ -289,7 +289,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose, onAc
                 </div>
                 <h3 className="text-lg font-medium mb-2">Account Added Successfully!</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Your {selectedProvider.charAt(0).toUpperCase() + selectedProvider.slice(1)} account has been added to Voida.
+                  Your {selectedProvider.charAt(0).toUpperCase() + selectedProvider.slice(1)} account has been added to Void.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   Note: This is a demo account. For full email functionality, complete the OAuth flow.

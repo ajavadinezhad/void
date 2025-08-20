@@ -362,6 +362,13 @@ export class EmailService {
 
       const messageData = await response.json();
       
+      // Check if message is read based on Gmail API response
+      // Gmail API includes 'labelIds' array - if 'UNREAD' is not present, message is read
+      const labelIds = messageData.labelIds || [];
+      const isRead = !labelIds.includes('UNREAD');
+      
+      console.log('EmailService: Gmail message labelIds:', labelIds, 'isRead:', isRead);
+      
       // Extract message details
       const headers = messageData.payload?.headers || [];
       const subject = headers.find((h: any) => h.name === 'Subject')?.value || '';
@@ -394,7 +401,7 @@ export class EmailService {
         body: String(body || ''),
         htmlBody: String(body || ''),
         date: date ? new Date(date) : new Date(),
-        isRead: false,
+        isRead: isRead,
         isFlagged: false,
         isAnswered: false,
         isForwarded: false,
