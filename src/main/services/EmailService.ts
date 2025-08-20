@@ -376,15 +376,33 @@ export class EmailService {
       const to = headers.find((h: any) => h.name === 'To')?.value || '';
       const date = headers.find((h: any) => h.name === 'Date')?.value || '';
       
-      // Get message body
+      // Get message body (text and HTML)
       let body = '';
+      let htmlBody = '';
+      
       if (messageData.payload?.body?.data) {
-        body = Buffer.from(messageData.payload.body.data, 'base64').toString('utf-8');
-      } else if (messageData.payload?.parts) {
-        const textPart = messageData.payload.parts.find((part: any) => part.mimeType === 'text/plain');
-        if (textPart?.body?.data) {
-          body = Buffer.from(textPart.body.data, 'base64').toString('utf-8');
+        // Simple message with just body
+        const contentType = messageData.payload.mimeType || 'text/plain';
+        const content = Buffer.from(messageData.payload.body.data, 'base64').toString('utf-8');
+        if (contentType.includes('text/html')) {
+          htmlBody = content;
+        } else {
+          body = content;
         }
+      } else if (messageData.payload?.parts) {
+        // Multipart message
+        for (const part of messageData.payload.parts) {
+          if (part.mimeType === 'text/plain' && part.body?.data) {
+            body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+          } else if (part.mimeType === 'text/html' && part.body?.data) {
+            htmlBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
+          }
+        }
+      }
+      
+      // If we have HTML but no plain text, use HTML as fallback
+      if (!body && htmlBody) {
+        body = htmlBody.replace(/<[^>]*>/g, ''); // Strip HTML tags for plain text
       }
 
       // Create email message object with safe data types for SQLite
@@ -399,7 +417,7 @@ export class EmailService {
         cc: '',
         bcc: '',
         body: String(body || ''),
-        htmlBody: String(body || ''),
+        htmlBody: String(htmlBody || ''),
         date: date ? new Date(date) : new Date(),
         isRead: isRead,
         isFlagged: false,

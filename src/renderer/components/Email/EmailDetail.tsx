@@ -69,6 +69,22 @@ const EmailDetail: React.FC<EmailDetailProps> = ({ message, onSendEmail, onViewT
     return sender;
   };
 
+  // Function to convert plain text to HTML with clickable links
+  const convertTextToHtml = (text: string) => {
+    if (!text) return '';
+    
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const htmlText = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">$1</a>')
+      .replace(/\n/g, '<br>');
+    
+    return htmlText;
+  };
+
   const hasAttachments = message.attachments && message.attachments.length > 0;
 
   // Helper functions for reply and forward
@@ -177,27 +193,30 @@ const EmailDetail: React.FC<EmailDetailProps> = ({ message, onSendEmail, onViewT
         </div>
 
         {/* Sender and date */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              From: {getSenderName(message.sender)}
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="text-sm">
+              <span className="font-medium text-gray-700 dark:text-gray-300">From:</span>
+              <span className="ml-2 text-gray-900 dark:text-white">{getSenderName(message.sender)}</span>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600 dark:text-gray-400 ml-4">
               {getSenderEmail(message.sender)}
             </div>
             {message.recipients && (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                To: {message.recipients}
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">To:</span>
+                <span className="ml-2 text-gray-900 dark:text-white">{message.recipients}</span>
               </div>
             )}
             {message.cc && (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                CC: {message.cc}
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">CC:</span>
+                <span className="ml-2 text-gray-900 dark:text-white">{message.cc}</span>
               </div>
             )}
           </div>
           
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
             {formatDate(message.date)}
           </div>
         </div>
@@ -231,14 +250,19 @@ const EmailDetail: React.FC<EmailDetailProps> = ({ message, onSendEmail, onViewT
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-        {message.htmlBody ? (
+        {message.htmlBody && message.htmlBody.trim() && message.htmlBody !== message.body ? (
           <div 
-            className="prose prose-sm max-w-none dark:prose-invert"
+            className="email-content prose prose-sm max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: message.htmlBody }}
           />
+        ) : message.body && message.body.trim() ? (
+          <div 
+            className="email-content prose prose-sm max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: convertTextToHtml(message.body) }}
+          />
         ) : (
-          <div className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">
-            {message.body || 'No content available'}
+          <div className="email-content text-sm text-gray-500 dark:text-gray-400">
+            No content available
           </div>
         )}
       </div>

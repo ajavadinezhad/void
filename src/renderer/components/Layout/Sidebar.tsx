@@ -28,6 +28,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
   const [expandedAccounts, setExpandedAccounts] = useState<Set<number>>(new Set());
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
 
+  // Debug logging
+  console.log('Sidebar render - collapsed:', collapsed, 'accounts:', accounts.length, 'folders:', folders.length);
+
   const handleCompose = () => {
     setIsComposeModalOpen(true);
   };
@@ -134,7 +137,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
   if (collapsed) {
     return (
       <>
-        <div className="w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className="w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col min-h-0">
           {/* Compose */}
           <div className="p-2">
             <button 
@@ -186,24 +189,27 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
 
   return (
     <>
-      <div className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      <div className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out min-h-0`}>
         {/* Compose button */}
         <div className="p-4">
           <button 
             onClick={handleCompose}
-            className="w-full btn btn-primary flex items-center justify-center space-x-2"
+            className={`w-full btn btn-primary flex items-center justify-center ${collapsed ? 'space-x-0' : 'space-x-2'}`}
+            title={collapsed ? 'Compose' : undefined}
           >
             <PlusIcon className="h-4 w-4" />
-            <span>Compose</span>
+            {!collapsed && <span>Compose</span>}
           </button>
         </div>
 
         {/* Folders */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="px-4 py-2">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              Folders ({folders.length})
-            </div>
+            {!collapsed && (
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Folders ({folders.length})
+              </div>
+            )}
             {folders.length > 0 ? (
               folders
                 .sort((a, b) => {
@@ -214,33 +220,38 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
                 .map((folder) => (
                 <button 
                   key={folder.id}
-                  className={`w-full sidebar-item flex items-center justify-between ${
+                  className={`w-full sidebar-item flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${
                     selectedFolderId === folder.id ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                   }`}
                   onClick={() => {
                     console.log('Clicked folder:', folder.name, 'ID:', folder.id);
                     onFolderSelect?.(folder.id);
                   }}
+                  title={collapsed ? folder.name : undefined}
                 >
                   <div className="flex items-center">
-                    {getFolderIcon(folder.type)}
-                    <span className="ml-2">{folder.name}</span>
+                    <div className="relative">
+                      {getFolderIcon(folder.type)}
+                      {folder.unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] leading-none rounded-full px-1 min-w-[16px] text-center">
+                          {folder.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    {!collapsed && <span className="ml-2">{folder.name}</span>}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    {folder.unreadCount > 0 && (
-                      <span className="text-xs bg-blue-600 text-white rounded-full px-2 py-1 min-w-[20px] text-center">
-                        {folder.unreadCount}
+                  {!collapsed && (
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-gray-500">
+                        {folder.totalCount}
                       </span>
-                    )}
-                    <span className="text-xs text-gray-500">
-                      {folder.totalCount}
-                    </span>
-                  </div>
+                    </div>
+                  )}
                 </button>
               ))
             ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                No folders found
+              <div className={`text-sm text-gray-500 dark:text-gray-400 py-2 ${collapsed ? 'text-center' : ''}`}>
+                {!collapsed && 'No folders found'}
               </div>
             )}
           </div>
