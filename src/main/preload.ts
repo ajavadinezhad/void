@@ -38,6 +38,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   updateSettings: (settings: any) => ipcRenderer.invoke('settings:update', settings),
 
+  // AI operations
+  sendAIMessage: (request: any) => ipcRenderer.invoke('ai:send-message', request),
+  summarizeEmail: (email: any, model: string) => ipcRenderer.invoke('ai:summarize-email', email, model),
+  draftReply: (email: any, model: string) => ipcRenderer.invoke('ai:draft-reply', email, model),
+  extractActionItems: (email: any, model: string) => ipcRenderer.invoke('ai:extract-action-items', email, model),
+  analyzeTone: (email: any, model: string) => ipcRenderer.invoke('ai:analyze-tone', email, model),
+  getAIConfig: () => ipcRenderer.invoke('ai:get-config'),
+  updateAIConfig: (config: any) => ipcRenderer.invoke('ai:update-config', config),
+
   // File operations
   selectAttachments: () => ipcRenderer.invoke('file:select-attachments'),
 
@@ -96,6 +105,15 @@ declare global {
       // Settings operations
       getSettings: () => Promise<any>;
       updateSettings: (settings: any) => Promise<any>;
+
+      // AI operations
+      sendAIMessage: (request: any) => Promise<any>;
+      summarizeEmail: (email: any, model: string) => Promise<string>;
+      draftReply: (email: any, model: string) => Promise<string>;
+      extractActionItems: (email: any, model: string) => Promise<string>;
+      analyzeTone: (email: any, model: string) => Promise<string>;
+      getAIConfig: () => Promise<any>;
+      updateAIConfig: (config: any) => Promise<void>;
 
       // File operations
       selectAttachments: () => Promise<string[]>;

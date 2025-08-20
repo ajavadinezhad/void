@@ -6,8 +6,14 @@ import { useFolderContext } from '@/renderer/stores/FolderContext';
 import EmailList from '@/renderer/components/Email/EmailList';
 import EmailDetail from '@/renderer/components/Email/EmailDetail';
 import EmailThread from '@/renderer/components/Email/EmailThread';
+import AIAssistant from '@/renderer/components/AI/AIAssistant';
 
-const EmailView: React.FC = () => {
+interface EmailViewProps {
+  isAIOpen?: boolean;
+  onToggleAI?: () => void;
+}
+
+const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) => {
   const { accounts } = useAccounts();
   const { selectedFolderId } = useFolderContext();
   const { 
@@ -122,6 +128,13 @@ const EmailView: React.FC = () => {
 
   return (
     <div className="h-full flex">
+      {/* AI Assistant */}
+      <AIAssistant
+        isOpen={isAIOpen}
+        onClose={onToggleAI || (() => {})}
+        selectedEmail={selectedMessage}
+        emails={emails}
+      />
       {/* Email List Pane */}
       <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
         {searchQuery.trim() && (

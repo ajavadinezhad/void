@@ -49,15 +49,19 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
   };
 
   const loadFolders = async () => {
+    console.log('Sidebar: loadFolders called, accounts:', accounts.length);
     const allFolders: EmailFolder[] = [];
     for (const account of accounts) {
       try {
+        console.log('Sidebar: Loading folders for account:', account.id, account.email);
         const accountFolders = await window.electronAPI.getFolders(account.id);
+        console.log('Sidebar: Got folders for account', account.id, ':', accountFolders);
         allFolders.push(...accountFolders);
       } catch (error) {
         console.error(`Failed to load folders for account ${account.id}:`, error);
       }
     }
+    console.log('Sidebar: Setting all folders:', allFolders);
     setFolders(allFolders);
   };
 
@@ -69,7 +73,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
 
   // Listen for data events to refresh folder counts
   useEffect(() => {
+    console.log('Sidebar: Setting up data event listener');
     const unsubscribe = window.electronAPI.onDataEvent(async (payload: any) => {
+      console.log('Sidebar: Received data event:', payload);
       if (payload?.type === 'emails:synced' || payload?.type === 'emails:all-synced' || payload?.type === 'folders:refreshed') {
         console.log('Sidebar: Refreshing folders due to data event:', payload.type);
         await loadFolders();

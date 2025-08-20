@@ -16,6 +16,7 @@ function App() {
   const { refreshEmails } = useEmails();
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [hasShownInitialModal, setHasShownInitialModal] = useState(false);
+  const [isAIOpen, setIsAIOpen] = useState(false);
 
   // Debug logging
   console.log('App render - showAddAccountModal:', showAddAccountModal, 'accounts:', accounts.length);
@@ -73,21 +74,34 @@ function App() {
     console.log('App: Accounts:', accounts);
     
     if (accounts.length > 0) {
+      const currentAccount = accounts[0];
+      console.log('App: Using current account:', currentAccount.id, currentAccount.email);
+      
       try {
-        console.log('App: Starting sync and refresh for account:', accounts[0].id, accounts[0].email);
-        console.log('App: Account provider:', accounts[0].provider);
-        console.log('App: Has OAuth token:', !!accounts[0].oauthToken);
+        console.log('App: Starting sync and refresh for account:', currentAccount.id, currentAccount.email);
+        console.log('App: Account provider:', currentAccount.provider);
+        console.log('App: Has OAuth token:', !!currentAccount.oauthToken);
         
-        // First refresh folders to get latest Gmail labels
-        console.log('App: Calling refreshFolders...');
+        // Step 1: Refresh folders to get latest Gmail labels
+        console.log('App: Step 1 - Calling refreshFolders...');
         window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 30, step: 'Refreshing folders...' } 
+          detail: { progress: 20, step: 'Refreshing folders...' } 
         }));
-        await window.electronAPI.refreshFolders(accounts[0].id);
+        await window.electronAPI.refreshFolders(currentAccount.id);
         console.log('App: Folder refresh completed successfully');
         
-        // Refresh sidebar folders
-        console.log('App: Refreshing sidebar folders...');
+        // Step 2: Wait a moment for folder data to be processed
+        console.log('App: Step 2 - Waiting for folder processing...');
+        window.dispatchEvent(new CustomEvent('refreshProgress', { 
+          detail: { progress: 40, step: 'Processing folders...' } 
+        }));
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Step 3: Refresh sidebar folders to update UI
+        console.log('App: Step 3 - Refreshing sidebar folders...');
+        window.dispatchEvent(new CustomEvent('refreshProgress', { 
+          detail: { progress: 60, step: 'Updating folder list...' } 
+        }));
         if ((window as any).refreshSidebarFolders) {
           await (window as any).refreshSidebarFolders();
           console.log('App: Sidebar folders refreshed successfully');
@@ -95,24 +109,34 @@ function App() {
           console.log('App: refreshSidebarFolders function not found');
         }
         
-        // Then sync all folders to get latest emails
-        console.log('App: Calling syncAllFolders...');
-        await window.electronAPI.syncAllFolders(accounts[0].id);
+        // Step 4: Sync all folders to get latest emails
+        console.log('App: Step 4 - Calling syncAllFolders...');
+        window.dispatchEvent(new CustomEvent('refreshProgress', { 
+          detail: { progress: 80, step: 'Syncing emails...' } 
+        }));
+        await window.electronAPI.syncAllFolders(currentAccount.id);
         console.log('App: All folders sync completed successfully');
         
-        // Then refresh the email list
-        console.log('App: Calling refreshEmails...');
+        // Step 5: Wait a moment for email data to be processed
+        console.log('App: Step 5 - Waiting for email processing...');
         window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 85, step: 'Updating UI...' } 
+          detail: { progress: 90, step: 'Processing emails...' } 
         }));
-        await refreshEmails(accounts[0].id);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Step 6: Refresh the email list
+        console.log('App: Step 6 - Calling refreshEmails...');
+        window.dispatchEvent(new CustomEvent('refreshProgress', { 
+          detail: { progress: 95, step: 'Updating email list...' } 
+        }));
+        await refreshEmails(currentAccount.id);
         console.log('App: Email refresh completed successfully');
         
         console.log('App: All refresh operations completed successfully!');
         
         // Trigger a global refresh event to notify all components
         window.dispatchEvent(new CustomEvent('refreshCompleted', { 
-          detail: { success: true, accountId: accounts[0].id } 
+          detail: { success: true, accountId: currentAccount.id } 
         }));
         
       } catch (error) {
@@ -157,8 +181,17 @@ function App() {
     <FolderProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Routes>
-          <Route path="/" element={<MainLayout accounts={accounts} loading={loading} onRefreshEmails={handleRefreshEmails} onSearch={handleSearch} />}>
-            <Route index element={<EmailView />} />
+          <Route path="/" element={
+            <MainLayout 
+              accounts={accounts} 
+              loading={loading} 
+              onRefreshEmails={handleRefreshEmails} 
+              onSearch={handleSearch}
+              onToggleAI={() => setIsAIOpen(!isAIOpen)}
+              isAIOpen={isAIOpen}
+            />
+          }>
+            <Route index element={<EmailView isAIOpen={isAIOpen} onToggleAI={() => setIsAIOpen(!isAIOpen)} />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

@@ -28,6 +28,14 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // Settings operations
     getSettings: () => electron_1.ipcRenderer.invoke('settings:get'),
     updateSettings: (settings) => electron_1.ipcRenderer.invoke('settings:update', settings),
+    // AI operations
+    sendAIMessage: (request) => electron_1.ipcRenderer.invoke('ai:send-message', request),
+    summarizeEmail: (email, model) => electron_1.ipcRenderer.invoke('ai:summarize-email', email, model),
+    draftReply: (email, model) => electron_1.ipcRenderer.invoke('ai:draft-reply', email, model),
+    extractActionItems: (email, model) => electron_1.ipcRenderer.invoke('ai:extract-action-items', email, model),
+    analyzeTone: (email, model) => electron_1.ipcRenderer.invoke('ai:analyze-tone', email, model),
+    getAIConfig: () => electron_1.ipcRenderer.invoke('ai:get-config'),
+    updateAIConfig: (config) => electron_1.ipcRenderer.invoke('ai:update-config', config),
     // File operations
     selectAttachments: () => electron_1.ipcRenderer.invoke('file:select-attachments'),
     // Window operations

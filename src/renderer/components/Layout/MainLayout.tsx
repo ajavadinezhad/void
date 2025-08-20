@@ -10,9 +10,11 @@ interface MainLayoutProps {
   loading: boolean;
   onRefreshEmails?: () => void;
   onSearch?: (query: string) => void;
+  onToggleAI?: () => void;
+  isAIOpen?: boolean;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ accounts, loading, onRefreshEmails, onSearch }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ accounts, loading, onRefreshEmails, onSearch, onToggleAI, isAIOpen }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { setSelectedFolderId } = useFolderContext();
 
@@ -47,6 +49,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ accounts, loading, onRefreshEma
         loading={loading}
         onRefreshEmails={onRefreshEmails}
         onSearch={onSearch}
+        onToggleAI={onToggleAI}
+        isAIOpen={isAIOpen}
       />
       
       <div className="flex-1 flex overflow-hidden">

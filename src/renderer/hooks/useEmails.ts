@@ -120,21 +120,33 @@ export function useEmails() {
   useEffect(() => {
     const unsubscribe = window.electronAPI.onDataEvent(async (payload: any) => {
       try {
+        console.log('useEmails: Received data event:', payload?.type, 'for account:', payload?.accountId, 'current account:', currentAccountId);
+        
         if (payload?.type === 'emails:synced' || payload?.type === 'emails:all-synced') {
-          if (currentAccountId) {
+          if (currentAccountId && payload.accountId === currentAccountId) {
+            console.log('useEmails: Refreshing emails after sync event');
+            // Wait a moment for the database to be fully updated
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchEmails(currentAccountId, currentFolderId, true);
           }
         } else if (payload?.type === 'folders:refreshed') {
-          if (currentAccountId) {
+          if (currentAccountId && payload.accountId === currentAccountId) {
+            console.log('useEmails: Refreshing emails after folder refresh');
+            // Wait a moment for the folders to be fully updated
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchEmails(currentAccountId, currentFolderId, true);
           }
         } else if (payload?.type === 'account:deleted') {
           // Clear local state when an account is deleted
+          console.log('useEmails: Clearing emails after account deletion');
           setEmails([]);
           setHasMore(false);
           setOffset(0);
+          setCurrentAccountId(null);
+          setCurrentFolderId(1);
         }
       } catch (e) {
+        console.error('useEmails: Error handling data event:', e);
         // ignore
       }
     });

@@ -4,6 +4,7 @@ import { DatabaseService } from '@/main/services/DatabaseService';
 import { EmailService } from '@/main/services/EmailService';
 import { OAuthService } from '@/main/services/OAuthService';
 import { SettingsService } from '@/main/services/SettingsService';
+import { AIService } from '@/main/services/AIService';
 
 class MainProcess {
   private mainWindow: BrowserWindow | null = null;
@@ -11,6 +12,7 @@ class MainProcess {
   private emailService: EmailService;
   private oauthService: OAuthService;
   private settingsService: SettingsService;
+  private aiService: AIService;
   private autoUpdater: any | null = null;
 
   constructor() {
@@ -21,6 +23,7 @@ class MainProcess {
     console.log('MainProcess constructor - OAuthService created');
     this.emailService = new EmailService(this.databaseService, this.oauthService);
     this.settingsService = new SettingsService();
+    this.aiService = new AIService();
     console.log('MainProcess constructor - all services initialized');
 
     // Lazy-load auto-updater (optional dependency)
@@ -117,7 +120,12 @@ class MainProcess {
 
   private setupIPC() {
     // Database operations
-    ipcMain.handle('db:get-accounts', () => this.databaseService.getAccounts());
+    ipcMain.handle('db:get-accounts', async () => {
+      console.log('MainProcess: getAccounts called');
+      const accounts = await this.databaseService.getAccounts();
+      console.log('MainProcess: getAccounts result:', accounts);
+      return accounts;
+    });
     ipcMain.handle('db:add-account', (_, account) => this.databaseService.addAccount(account));
     ipcMain.handle('db:update-account', (_, account) => this.databaseService.updateAccount(account));
     ipcMain.handle('db:delete-account', async (_, id) => {
@@ -126,7 +134,12 @@ class MainProcess {
       return result;
     });
 
-    ipcMain.handle('db:get-folders', (_, accountId) => this.databaseService.getFolders(accountId));
+    ipcMain.handle('db:get-folders', async (_, accountId) => {
+      console.log('MainProcess: getFolders called for accountId:', accountId);
+      const folders = await this.databaseService.getFolders(accountId);
+      console.log('MainProcess: getFolders result:', folders);
+      return folders;
+    });
     ipcMain.handle('db:get-messages', (_, folderId, limit, offset) => 
       this.databaseService.getMessages(folderId, limit, offset));
     ipcMain.handle('db:get-message', (_, id) => this.databaseService.getMessage(id));
@@ -145,13 +158,19 @@ class MainProcess {
       return true;
     });
     ipcMain.handle('email:sync-all-folders', async (_, accountId) => {
+      console.log('MainProcess: syncAllFolders called for accountId:', accountId);
       await this.emailService.syncAllFolders(accountId);
+      console.log('MainProcess: syncAllFolders completed, sending data event');
       this.mainWindow?.webContents.send('data:event', { type: 'emails:all-synced', accountId });
+      console.log('MainProcess: data event sent for emails:all-synced');
       return true;
     });
     ipcMain.handle('email:refresh-folders', async (_, accountId) => {
+      console.log('MainProcess: refreshFolders called for accountId:', accountId);
       await this.emailService.refreshFolders(accountId);
+      console.log('MainProcess: refreshFolders completed, sending data event');
       this.mainWindow?.webContents.send('data:event', { type: 'folders:refreshed', accountId });
+      console.log('MainProcess: data event sent for folders:refreshed');
       return true;
     });
     ipcMain.handle('email:send-message', (_, message) => this.emailService.sendMessage(message));
@@ -165,6 +184,15 @@ class MainProcess {
     // Settings operations
     ipcMain.handle('settings:get', () => this.settingsService.getSettings());
     ipcMain.handle('settings:update', (_, settings) => this.settingsService.updateSettings(settings));
+
+    // AI operations
+    ipcMain.handle('ai:send-message', (_, request) => this.aiService.sendMessage(request));
+    ipcMain.handle('ai:summarize-email', (_, email, model) => this.aiService.summarizeEmail(email, model));
+    ipcMain.handle('ai:draft-reply', (_, email, model) => this.aiService.draftReply(email, model));
+    ipcMain.handle('ai:extract-action-items', (_, email, model) => this.aiService.extractActionItems(email, model));
+    ipcMain.handle('ai:analyze-tone', (_, email, model) => this.aiService.analyzeTone(email, model));
+    ipcMain.handle('ai:get-config', () => this.aiService.getConfig());
+    ipcMain.handle('ai:update-config', (_, config) => this.aiService.updateConfig(config));
 
     // File operations
     ipcMain.handle('file:select-attachments', async () => {

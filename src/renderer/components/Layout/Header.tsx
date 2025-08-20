@@ -8,7 +8,8 @@ import {
   Cog6ToothIcon,
   ArrowPathIcon,
   UserIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 
 interface HeaderProps {
@@ -18,9 +19,11 @@ interface HeaderProps {
   loading: boolean;
   onRefreshEmails?: () => void;
   onSearch?: (query: string) => void;
+  onToggleAI?: () => void;
+  isAIOpen?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, accounts, loading, onRefreshEmails, onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, accounts, loading, onRefreshEmails, onSearch, onToggleAI, isAIOpen }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(0);
   const [refreshStep, setRefreshStep] = useState('');
@@ -30,13 +33,13 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
   const currentAccount = accounts[0];
   
   // Debug logging
-  console.log('Header render - accounts:', accounts.length, 'currentAccount:', currentAccount?.email, 'loading:', loading, 'isRefreshing:', isRefreshing);
+  console.log('Header render - accounts:', accounts.length, 'currentAccount:', currentAccount?.id, currentAccount?.email, 'loading:', loading, 'isRefreshing:', isRefreshing);
 
   // Force re-render when accounts change
   useEffect(() => {
-    console.log('Header: Accounts changed, re-rendering');
+    console.log('Header: Accounts changed, re-rendering. Current account:', currentAccount?.id, currentAccount?.email);
     // Force a re-render by updating a state
-  }, [accounts, loading]);
+  }, [accounts, loading, currentAccount]);
 
   // Listen for refresh progress and completion events
   useEffect(() => {
@@ -119,7 +122,20 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
 
   // Handle refresh with progress tracking
   const handleRefresh = async () => {
-    if (!currentAccount || isRefreshing) return;
+    console.log('Header: Refresh button clicked. Current account:', currentAccount?.id, currentAccount?.email);
+    console.log('Header: All accounts:', accounts.map(a => ({ id: a.id, email: a.email })));
+    
+    if (!currentAccount || isRefreshing) {
+      console.log('Header: Refresh blocked - no account or already refreshing');
+      return;
+    }
+    
+    // Ensure we have the latest account data
+    if (loading) {
+      console.log('Header: Still loading, waiting...');
+      setRefreshStep('Waiting for account data...');
+      return;
+    }
     
     setIsRefreshing(true);
     setRefreshProgress(0);
@@ -192,6 +208,16 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
           >
             <Cog6ToothIcon className="h-5 w-5" />
           </Link>
+          
+          <button
+            onClick={onToggleAI}
+            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+              isAIOpen ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' : ''
+            }`}
+            title="AI Assistant"
+          >
+            <SparklesIcon className="h-5 w-5" />
+          </button>
           <button
             onClick={handleCheckUpdates}
             className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-1 ${updateStatus ? 'animate-pulse' : ''}`}
