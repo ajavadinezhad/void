@@ -10,7 +10,6 @@ import {
   ComputerDesktopIcon,
   BellIcon,
   SpeakerWaveIcon,
-  SparklesIcon,
   ShieldCheckIcon,
   EnvelopeIcon,
   PlusIcon,
@@ -65,18 +64,7 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleAIFeatureChange = async (feature: string, enabled: boolean) => {
-    try {
-      const currentFeatures = settings?.aiFeatures || {};
-      const updatedFeatures = { ...currentFeatures, [feature]: enabled };
-      const updatedSettings = await window.electronAPI.updateSettings({ 
-        aiFeatures: updatedFeatures 
-      });
-      setSettings(updatedSettings);
-    } catch (error) {
-      console.error('Failed to update AI feature:', error);
-    }
-  };
+
 
   const handleAccountAdded = async (accountData: any) => {
     try {
@@ -281,40 +269,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* AI Features */}
-        <div className="card p-6">
-          <div className="flex items-center mb-4">
-            <SparklesIcon className="h-6 w-6 text-purple-500 mr-3" />
-            <h2 className="text-lg font-semibold">AI Features</h2>
-          </div>
-          
-          <div className="space-y-4">
-            {[
-              { key: 'writingEnabled', label: 'Writing assistance', description: 'AI-powered email composition help' },
-              { key: 'searchEnabled', label: 'AI search', description: 'Intelligent email search and Q&A' },
-              { key: 'summarizationEnabled', label: 'Email summarization', description: 'Auto-summarize long email threads' },
-              { key: 'privacyRedactionEnabled', label: 'Privacy redaction', description: 'Automatically redact sensitive information' }
-            ].map(({ key, label, description }) => (
-              <div key={key} className="flex items-center justify-between">
-                <div>
-                  <label className="text-sm font-medium">{label}</label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {description}
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings?.aiFeatures?.[key] || false}
-                    onChange={(e) => handleAIFeatureChange(key, e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {/* Sync Settings */}
         <div className="card p-6">

@@ -7,7 +7,11 @@ import {
   LightBulbIcon,
   ChatBubbleLeftRightIcon,
   XMarkIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+  GlobeAltIcon,
+  ClockIcon,
+  FolderIcon
 } from '@heroicons/react/24/outline';
 import { EmailMessage } from '@/shared/types';
 import AISettings from './AISettings';
@@ -127,14 +131,14 @@ Email Context:
 
   const quickActions = [
     {
+      icon: ExclamationTriangleIcon,
+      label: 'Check for Scam',
+      action: () => sendMessage('Analyze this email for potential scam indicators. Look for suspicious elements like urgent requests for money, unusual sender addresses, poor grammar, requests for personal information, or other red flags that might indicate this is a phishing attempt or scam.')
+    },
+    {
       icon: DocumentTextIcon,
       label: 'Summarize',
       action: () => sendMessage('Please summarize the key points of this email.')
-    },
-    {
-      icon: PaperAirplaneIcon,
-      label: 'Draft Reply',
-      action: () => sendMessage('Help me draft a professional reply to this email.')
     },
     {
       icon: LightBulbIcon,
@@ -142,9 +146,29 @@ Email Context:
       action: () => sendMessage('Extract any action items or tasks from this email.')
     },
     {
+      icon: ClockIcon,
+      label: 'Extract Deadlines',
+      action: () => sendMessage('Extract any deadlines, due dates, meeting times, or time-sensitive information from this email. List them clearly with their dates and times.')
+    },
+    {
+      icon: PaperAirplaneIcon,
+      label: 'Draft Reply',
+      action: () => sendMessage('Help me draft a professional reply to this email.')
+    },
+    {
       icon: ChatBubbleLeftRightIcon,
       label: 'Analyze Tone',
       action: () => sendMessage('Analyze the tone and sentiment of this email.')
+    },
+    {
+      icon: GlobeAltIcon,
+      label: 'Translate',
+      action: () => sendMessage('Translate this email to English (if it\'s in another language) or suggest what language it might be in. If it\'s already in English, provide a brief translation summary.')
+    },
+    {
+      icon: FolderIcon,
+      label: 'Categorize',
+      action: () => sendMessage('Suggest which folder or category this email should be organized into (e.g., Work, Personal, Promotions, Social, Updates, etc.) and explain why.')
     }
   ];
 
