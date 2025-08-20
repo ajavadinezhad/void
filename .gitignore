@@ -1,0 +1,4 @@
+node_modules
+.env
+src/main/config/oauth.json
+dist/main/config/oauth.json
