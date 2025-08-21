@@ -16,26 +16,11 @@ class MainProcess {
   private autoUpdater: any | null = null;
 
   constructor() {
-    console.log('MainProcess constructor - initializing services...');
     this.databaseService = new DatabaseService();
-    console.log('MainProcess constructor - creating OAuthService...');
     this.oauthService = new OAuthService();
-    console.log('MainProcess constructor - OAuthService created');
     this.emailService = new EmailService(this.databaseService, this.oauthService);
     this.settingsService = new SettingsService();
     this.aiService = new AIService();
-    console.log('MainProcess constructor - all services initialized');
-
-    // Lazy-load auto-updater (optional dependency)
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { autoUpdater } = require('electron-updater');
-      this.autoUpdater = autoUpdater;
-      this.autoUpdater.autoDownload = false;
-    } catch (err) {
-      console.log('Auto updater not available (electron-updater not installed/configured).');
-      this.autoUpdater = null;
-    }
   }
 
   async initialize() {
@@ -43,6 +28,16 @@ class MainProcess {
     await this.settingsService.initialize();
     this.setupIPC();
     this.createWindow();
+    
+    // Initialize auto-updater if available
+    if (typeof require !== 'undefined') {
+      try {
+        const { autoUpdater } = require('electron-updater');
+        autoUpdater.checkForUpdatesAndNotify();
+      } catch (error) {
+        // Auto updater not available
+      }
+    }
   }
 
   private createWindow() {
@@ -121,9 +116,7 @@ class MainProcess {
   private setupIPC() {
     // Database operations
     ipcMain.handle('db:get-accounts', async () => {
-      console.log('MainProcess: getAccounts called');
       const accounts = await this.databaseService.getAccounts();
-      console.log('MainProcess: getAccounts result:', accounts);
       return accounts;
     });
     ipcMain.handle('db:add-account', (_, account) => this.databaseService.addAccount(account));
@@ -135,9 +128,7 @@ class MainProcess {
     });
 
     ipcMain.handle('db:get-folders', async (_, accountId) => {
-      console.log('MainProcess: getFolders called for accountId:', accountId);
       const folders = await this.databaseService.getFolders(accountId);
-      console.log('MainProcess: getFolders result:', folders);
       return folders;
     });
     ipcMain.handle('db:get-messages', (_, folderId, limit, offset) => 
@@ -158,19 +149,13 @@ class MainProcess {
       return true;
     });
     ipcMain.handle('email:sync-all-folders', async (_, accountId) => {
-      console.log('MainProcess: syncAllFolders called for accountId:', accountId);
       await this.emailService.syncAllFolders(accountId);
-      console.log('MainProcess: syncAllFolders completed, sending data event');
       this.mainWindow?.webContents.send('data:event', { type: 'emails:all-synced', accountId });
-      console.log('MainProcess: data event sent for emails:all-synced');
       return true;
     });
     ipcMain.handle('email:refresh-folders', async (_, accountId) => {
-      console.log('MainProcess: refreshFolders called for accountId:', accountId);
       await this.emailService.refreshFolders(accountId);
-      console.log('MainProcess: refreshFolders completed, sending data event');
       this.mainWindow?.webContents.send('data:event', { type: 'folders:refreshed', accountId });
-      console.log('MainProcess: data event sent for folders:refreshed');
       return true;
     });
     ipcMain.handle('email:send-message', (_, message) => this.emailService.sendMessage(message));

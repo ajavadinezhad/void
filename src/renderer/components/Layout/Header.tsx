@@ -4,7 +4,6 @@ import { EmailAccount } from '@/shared/types';
 import { useTheme } from '@/renderer/hooks/useTheme';
 import { 
   Bars3Icon, 
-  PlusIcon, 
   Cog6ToothIcon,
   ArrowPathIcon,
   UserIcon,
@@ -33,7 +32,15 @@ interface HeaderProps {
   isAIOpen?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, accounts, loading, onRefreshEmails, onToggleAI, isAIOpen }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  sidebarCollapsed, 
+  onToggleSidebar, 
+  accounts, 
+  loading, 
+  onRefreshEmails, 
+  onToggleAI, 
+  isAIOpen 
+}) => {
   const { theme, updateTheme } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(0);
@@ -41,28 +48,16 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [autoSync, setAutoSync] = useState(false);
 
-  // Get the current account (first account for now)
   const currentAccount = accounts[0];
-  
-  // Debug logging
-  console.log('Header render - accounts:', accounts.length, 'currentAccount:', currentAccount?.id, currentAccount?.email, 'loading:', loading, 'isRefreshing:', isRefreshing);
-
-  // Force re-render when accounts change
-  useEffect(() => {
-    console.log('Header: Accounts changed, re-rendering. Current account:', currentAccount?.id, currentAccount?.email);
-    // Force a re-render by updating a state
-  }, [accounts, loading, currentAccount]);
 
   // Listen for refresh progress and completion events
   useEffect(() => {
     const handleRefreshProgress = (event: CustomEvent) => {
-      console.log('Header: Refresh progress event received:', event.detail);
       setRefreshProgress(event.detail.progress);
       setRefreshStep(event.detail.step);
     };
 
     const handleRefreshCompleted = (event: CustomEvent) => {
-      console.log('Header: Refresh completed event received:', event.detail);
       if (event.detail.success) {
         setRefreshProgress(100);
         setRefreshStep('Refresh completed successfully!');
@@ -73,6 +68,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
 
     window.addEventListener('refreshProgress', handleRefreshProgress as EventListener);
     window.addEventListener('refreshCompleted', handleRefreshCompleted as EventListener);
+    
     return () => {
       window.removeEventListener('refreshProgress', handleRefreshProgress as EventListener);
       window.removeEventListener('refreshCompleted', handleRefreshCompleted as EventListener);
@@ -82,6 +78,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
   // Listen for auto-update events
   useEffect(() => {
     if (!window.electronAPI.onUpdateEvent) return;
+    
     window.electronAPI.onUpdateEvent((payload: any) => {
       switch (payload?.type) {
         case 'checking':
@@ -116,18 +113,15 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
         setUpdateStatus('Updates not configured');
         setTimeout(() => setUpdateStatus(null), 2500);
       }
-      // Otherwise, events will update the status
     } catch (e) {
       setUpdateStatus('Update check failed');
       setTimeout(() => setUpdateStatus(null), 2500);
     }
   };
 
-
-
   // Generate initials from email
   const getInitials = (email: string) => {
-    const parts = email.split('@')[0]; // Get part before @
+    const parts = email.split('@')[0];
     if (parts.length >= 2) {
       return parts.substring(0, 2).toUpperCase();
     }
@@ -136,17 +130,11 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
 
   // Handle refresh with progress tracking
   const handleRefresh = async () => {
-    console.log('Header: Refresh button clicked. Current account:', currentAccount?.id, currentAccount?.email);
-    console.log('Header: All accounts:', accounts.map(a => ({ id: a.id, email: a.email })));
-    
     if (!currentAccount || isRefreshing) {
-      console.log('Header: Refresh blocked - no account or already refreshing');
       return;
     }
     
-    // Ensure we have the latest account data
     if (loading) {
-      console.log('Header: Still loading, waiting...');
       setRefreshStep('Waiting for account data...');
       return;
     }
@@ -156,27 +144,22 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
     setRefreshStep('Starting refresh...');
     
     try {
-      // Simulate progress updates with more realistic timing
       const progressInterval = setInterval(() => {
         setRefreshProgress(prev => {
-          // Simulate progress from 0 to 90% during the refresh
           if (prev >= 90) return prev;
           const increment = Math.max(1, Math.random() * 3);
           return Math.min(90, prev + increment);
         });
       }, 500);
       
-      // Call the actual refresh function
       if (onRefreshEmails) {
         await onRefreshEmails();
       }
       
-      // Clear the interval and complete
       clearInterval(progressInterval);
       setRefreshProgress(100);
       setRefreshStep('Refresh completed!');
       
-      // Reset after a short delay
       setTimeout(() => {
         setIsRefreshing(false);
         setRefreshProgress(0);
@@ -184,7 +167,6 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
       }, 1500);
       
     } catch (error) {
-      console.error('Refresh failed:', error);
       setRefreshStep('Refresh failed');
       setTimeout(() => {
         setIsRefreshing(false);
@@ -194,128 +176,127 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
     }
   };
 
+  const handleThemeToggle = () => {
+    const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
+    const currentIndex = themes.indexOf(theme);
+    const nextTheme = themes[(currentIndex + 1) % themes.length];
+    updateTheme(nextTheme);
+  };
+
   return (
     <div>
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 py-2">
-      {/* Left side */}
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        >
-          <Bars3Icon className="h-5 w-5" />
-        </button>
-        
+        {/* Left side */}
         <div className="flex items-center space-x-2">
-          {/* Core Email Actions */}
-          <button 
-            onClick={handleRefresh}
-            disabled={!currentAccount || isRefreshing}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
-            title="Sync & Refresh Emails"
-          >
-            <ArrowPathIcon className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-          
           <button
-            onClick={() => setAutoSync(!autoSync)}
-            className={`p-2 rounded-lg transition-colors ${
-              autoSync 
-                ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800' 
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-            title={`Auto-sync: ${autoSync ? 'ON (5 min)' : 'OFF'}`}
-          >
-            <ClockIcon className="h-5 w-5" />
-          </button>
-          
-          {/* Divider */}
-          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-          
-          {/* Smart Features */}
-          <button
-            onClick={onToggleAI}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-              isAIOpen ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' : ''
-            }`}
-            title="AI Assistant"
-          >
-            <SparklesIcon className="h-5 w-5" />
-          </button>
-          
-          {/* Divider */}
-          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-          
-          {/* System & External */}
-          <button
-            onClick={handleCheckUpdates}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${updateStatus ? 'animate-pulse' : ''}`}
-            title={updateStatus ? updateStatus : 'Check for updates'}
-          >
-            <ArrowDownTrayIcon className={`h-5 w-5 ${updateStatus?.startsWith('Update') ? 'text-green-500' : ''}`} />
-          </button>
-          
-          <a
-            href="https://github.com/your-username/void-email-client"
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={onToggleSidebar}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="View on GitHub"
           >
-            <GitHubIcon className="h-6 w-6" />
-          </a>
-          
-          {/* Theme Toggle */}
-          <button
-            onClick={() => {
-              const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
-              const currentIndex = themes.indexOf(theme);
-              const nextTheme = themes[(currentIndex + 1) % themes.length];
-              updateTheme(nextTheme);
-            }}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title={`Theme: ${theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}`}
-          >
-            {theme === 'light' && <SunIcon className="h-5 w-5" />}
-            {theme === 'dark' && <MoonIcon className="h-5 w-5" />}
-            {theme === 'system' && <ComputerDesktopIcon className="h-5 w-5" />}
+            <Bars3Icon className="h-5 w-5" />
           </button>
           
-          {/* Divider */}
-          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-          
-          {/* Settings - Last Item */}
-          <Link
-            to="/settings"
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Settings"
-          >
-            <Cog6ToothIcon className="h-5 w-5" />
+          <div className="flex items-center space-x-2">
+            {/* Core Email Actions */}
+            <button 
+              onClick={handleRefresh}
+              disabled={!currentAccount || isRefreshing}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
+              title="Sync & Refresh Emails"
+            >
+              <ArrowPathIcon className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+            
+            <button
+              onClick={() => setAutoSync(!autoSync)}
+              className={`p-2 rounded-lg transition-colors ${
+                autoSync 
+                  ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800' 
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title={`Auto-sync: ${autoSync ? 'ON (5 min)' : 'OFF'}`}
+            >
+              <ClockIcon className="h-5 w-5" />
+            </button>
+            
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+            
+            {/* Smart Features */}
+            <button
+              onClick={onToggleAI}
+              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                isAIOpen ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' : ''
+              }`}
+              title="AI Assistant"
+            >
+              <SparklesIcon className="h-5 w-5" />
+            </button>
+            
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+            
+            {/* System & External */}
+            <button
+              onClick={handleCheckUpdates}
+              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${updateStatus ? 'animate-pulse' : ''}`}
+              title={updateStatus ? updateStatus : 'Check for updates'}
+            >
+              <ArrowDownTrayIcon className={`h-5 w-5 ${updateStatus?.startsWith('Update') ? 'text-green-500' : ''}`} />
+            </button>
+            
+            <a
+              href="https://github.com/your-username/void-email-client"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="View on GitHub"
+            >
+              <GitHubIcon className="h-6 w-6" />
+            </a>
+            
+            {/* Theme Toggle */}
+            <button
+              onClick={handleThemeToggle}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title={`Theme: ${theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}`}
+            >
+              {theme === 'light' && <SunIcon className="h-5 w-5" />}
+              {theme === 'dark' && <MoonIcon className="h-5 w-5" />}
+              {theme === 'system' && <ComputerDesktopIcon className="h-5 w-5" />}
+            </button>
+            
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+            
+            {/* Settings - Last Item */}
+            <Link
+              to="/settings"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Settings"
+            >
+              <Cog6ToothIcon className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Center - Spacer */}
+        <div className="flex-1" />
+
+        {/* Right side */}
+        <div className="flex items-center space-x-2">
+          {/* User Profile Indicator */}
+          <Link to="/settings" className="block">
+            {currentAccount ? (
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium hover:bg-blue-600 transition-colors cursor-pointer">
+                <span>{getInitials(currentAccount.email)}</span>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-medium hover:bg-gray-500 transition-colors cursor-pointer">
+                <UserIcon className="h-4 w-4" />
+              </div>
+            )}
           </Link>
         </div>
-      </div>
-
-            {/* Center - Spacer */}
-      <div className="flex-1" />
-
-      {/* Right side */}
-      <div className="flex items-center space-x-2">
-        {/* User Profile Indicator */}
-        <Link
-          to="/settings"
-          className="block"
-        >
-          {currentAccount ? (
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium hover:bg-blue-600 transition-colors cursor-pointer">
-              <span>{getInitials(currentAccount.email)}</span>
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-medium hover:bg-gray-500 transition-colors cursor-pointer">
-              <UserIcon className="h-4 w-4" />
-            </div>
-          )}
-        </Link>
-      </div>
       </header>
       
       {/* Progress Bar */}

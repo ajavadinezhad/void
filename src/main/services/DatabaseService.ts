@@ -198,32 +198,22 @@ export class DatabaseService {
   async deleteAccount(id: number): Promise<boolean> {
     if (!this.db) throw new Error('Database not initialized');
     
-    console.log('DatabaseService: Deleting account with ID:', id);
-    
-    // Start a transaction to ensure all operations succeed or fail together
     const transaction = this.db.transaction(() => {
-      // 1. Delete all messages for this account
-      const deleteMessagesStmt = this.db!.prepare('DELETE FROM messages WHERE account_id = ?');
-      const messagesDeleted = deleteMessagesStmt.run(id).changes;
-      console.log('DatabaseService: Deleted', messagesDeleted, 'messages for account', id);
+      // Delete messages first
+      const messagesStmt = this.db!.prepare('DELETE FROM messages WHERE account_id = ?');
+      const messagesDeleted = messagesStmt.run(id).changes;
       
-      // 2. Delete all folders for this account
-      const deleteFoldersStmt = this.db!.prepare('DELETE FROM folders WHERE account_id = ?');
-      const foldersDeleted = deleteFoldersStmt.run(id).changes;
-      console.log('DatabaseService: Deleted', foldersDeleted, 'folders for account', id);
+      // Delete folders
+      const foldersStmt = this.db!.prepare('DELETE FROM folders WHERE account_id = ?');
+      const foldersDeleted = foldersStmt.run(id).changes;
       
-      // 3. Delete all attachments for this account (if any)
-      const deleteAttachmentsStmt = this.db!.prepare(`
-        DELETE FROM attachments 
-        WHERE message_id IN (SELECT id FROM messages WHERE account_id = ?)
-      `);
-      const attachmentsDeleted = deleteAttachmentsStmt.run(id).changes;
-      console.log('DatabaseService: Deleted', attachmentsDeleted, 'attachments for account', id);
+      // Delete attachments
+      const attachmentsStmt = this.db!.prepare('DELETE FROM attachments WHERE account_id = ?');
+      const attachmentsDeleted = attachmentsStmt.run(id).changes;
       
-      // 4. Finally, delete the account itself
-      const deleteAccountStmt = this.db!.prepare('DELETE FROM accounts WHERE id = ?');
-      const accountDeleted = deleteAccountStmt.run(id).changes;
-      console.log('DatabaseService: Deleted account:', accountDeleted > 0 ? 'success' : 'failed');
+      // Finally delete the account
+      const accountStmt = this.db!.prepare('DELETE FROM accounts WHERE id = ?');
+      const accountDeleted = accountStmt.run(id).changes;
       
       return {
         messagesDeleted,
@@ -233,14 +223,8 @@ export class DatabaseService {
       };
     });
     
-    try {
-      const result = transaction();
-      console.log('DatabaseService: Account deletion completed successfully:', result);
-      return result.accountDeleted;
-    } catch (error) {
-      console.error('DatabaseService: Error deleting account:', error);
-      throw error;
-    }
+    const result = transaction();
+    return result.accountDeleted;
   }
 
   private async getAccount(id: number): Promise<EmailAccount> {
@@ -356,7 +340,6 @@ export class DatabaseService {
     const updateStmt = this.db.prepare('UPDATE folders SET total_count = ?, unread_count = ? WHERE id = ?');
     updateStmt.run(totalResult.total, unreadResult.unread, folderId);
     
-    console.log('DatabaseService: Updated folder', folderId, 'counts - total:', totalResult.total, 'unread:', unreadResult.unread);
   }
 
   async updateAllFolderCounts(accountId: number): Promise<void> {
@@ -370,7 +353,6 @@ export class DatabaseService {
       await this.updateFolderCounts(folder.id);
     }
     
-    console.log('DatabaseService: Updated counts for all folders in account', accountId);
   }
 
   async clearMessagesForAccount(accountId: number): Promise<void> {
@@ -379,34 +361,11 @@ export class DatabaseService {
     const stmt = this.db.prepare('DELETE FROM messages WHERE account_id = ?');
     stmt.run(accountId);
     
-    console.log('DatabaseService: Cleared all messages for account', accountId);
   }
 
   // Message operations
   async getMessages(folderId: number, limit: number = 50, offset: number = 0): Promise<{ messages: EmailMessage[], total: number }> {
     if (!this.db) throw new Error('Database not initialized');
-    
-    console.log('DatabaseService: getMessages called with folderId:', folderId, 'limit:', limit, 'offset:', offset);
-    
-    // First, let's check what folders exist
-    const foldersStmt = this.db.prepare('SELECT * FROM folders');
-    const allFolders = foldersStmt.all() as any[];
-    console.log('DatabaseService: All folders in database:', allFolders);
-    
-    // Check if the requested folder exists
-    const folderStmt = this.db.prepare('SELECT * FROM folders WHERE id = ?');
-    const folder = folderStmt.get(folderId) as any;
-    console.log('DatabaseService: Requested folder:', folder);
-    
-    // Check how many messages exist in total
-    const totalMessagesStmt = this.db.prepare('SELECT COUNT(*) as count FROM messages');
-    const totalMessages = totalMessagesStmt.get() as any;
-    console.log('DatabaseService: Total messages in database:', totalMessages.count);
-    
-    // Check how many messages exist for this folder
-    const folderMessagesStmt = this.db.prepare('SELECT COUNT(*) as count FROM messages WHERE folder_id = ?');
-    const folderMessages = folderMessagesStmt.get(folderId) as any;
-    console.log('DatabaseService: Messages in folder', folderId, ':', folderMessages.count);
     
     const stmt = this.db.prepare(`
       SELECT * FROM messages 
@@ -416,7 +375,6 @@ export class DatabaseService {
     `);
     
     const rawResult = stmt.all(folderId, limit, offset) as any[];
-    console.log('DatabaseService: getMessages result:', rawResult.length, 'messages');
     
     // Convert date strings to Date objects and boolean fields
     const result = rawResult.map(row => ({
@@ -433,7 +391,7 @@ export class DatabaseService {
       createdAt: new Date(row.created_at)
     })) as EmailMessage[];
     
-    return { messages: result, total: folderMessages.count };
+    return { messages: result, total: rawResult.length };
   }
 
   async getMessage(id: number): Promise<EmailMessage | null> {
@@ -494,7 +452,6 @@ export class DatabaseService {
     `);
     
     const rawResult = stmt.all(threadId) as any[];
-    console.log('DatabaseService: getMessagesByThreadId result:', rawResult.length, 'messages for thread:', threadId);
     
     // Convert date strings to Date objects and boolean fields
     const result = rawResult.map(row => ({
@@ -520,7 +477,6 @@ export class DatabaseService {
     // Check if message already exists
     const existingMessage = await this.getMessageByUid(message.accountId, message.uid);
     if (existingMessage) {
-      console.log('DatabaseService: Message already exists, skipping:', message.uid);
       return existingMessage;
     }
     
@@ -529,18 +485,11 @@ export class DatabaseService {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
-    // Convert boolean fields to numbers BEFORE creating params array
+    // Convert boolean fields to numbers
     const isRead = message.isRead ? 1 : 0;
     const isFlagged = message.isFlagged ? 1 : 0;
     const isAnswered = message.isAnswered ? 1 : 0;
     const isForwarded = message.isForwarded ? 1 : 0;
-    
-    console.log('DatabaseService: Boolean conversion:', {
-      isRead: { original: message.isRead, converted: isRead },
-      isFlagged: { original: message.isFlagged, converted: isFlagged },
-      isAnswered: { original: message.isAnswered, converted: isAnswered },
-      isForwarded: { original: message.isForwarded, converted: isForwarded }
-    });
     
     const params = [
       message.accountId,
@@ -561,22 +510,6 @@ export class DatabaseService {
       isForwarded,
       message.size
     ];
-    
-    // Debug: Log parameter types
-    console.log('DatabaseService: Parameter types:', params.map((param, index) => ({
-      index,
-      value: param,
-      type: typeof param,
-      constructor: param?.constructor?.name,
-      isNull: param === null,
-      isUndefined: param === undefined,
-      isObject: typeof param === 'object' && param !== null,
-      isArray: Array.isArray(param)
-    })));
-    
-    console.log('DatabaseService: SQLite parameters types:', params.map((param, index) => 
-      `${index}: ${typeof param} = ${param}`
-    ));
     
     const result = stmt.run(...params);
     
@@ -623,8 +556,6 @@ export class DatabaseService {
   async searchMessages(query: string, folderId?: number, limit: number = 50): Promise<EmailMessage[]> {
     if (!this.db) throw new Error('Database not initialized');
     
-    console.log('DatabaseService: Searching for query:', query, 'in folder:', folderId);
-    
     // Parse advanced search query
     const searchConditions = this.parseSearchQuery(query);
     
@@ -659,13 +590,8 @@ export class DatabaseService {
     sql += ' ORDER BY date DESC LIMIT ?';
     params.push(limit);
     
-    console.log('DatabaseService: Search SQL:', sql);
-    console.log('DatabaseService: Search params:', params);
-    
     const stmt = this.db.prepare(sql);
     const results = stmt.all(...params) as EmailMessage[];
-    
-    console.log('DatabaseService: Search results:', results.length, 'emails found');
     
     return results;
   }

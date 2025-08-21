@@ -18,38 +18,26 @@ function App() {
   const [hasShownInitialModal, setHasShownInitialModal] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
 
-  // Debug logging
-  console.log('App render - showAddAccountModal:', showAddAccountModal, 'accounts:', accounts.length);
-
-
-
   // Apply theme to document
   React.useEffect(() => {
-    console.log('Applying theme:', theme);
     document.documentElement.classList.remove('light', 'dark');
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      console.log('System theme detected:', systemTheme);
       document.documentElement.classList.add(systemTheme);
     } else {
-      console.log('Applying specific theme:', theme);
       document.documentElement.classList.add(theme);
     }
-    console.log('Current document classes:', document.documentElement.classList.toString());
   }, [theme]);
 
   // Show Add Account modal when no accounts are configured
   useEffect(() => {
-    console.log('App useEffect - loading:', loading, 'accounts.length:', accounts.length, 'hasShownInitialModal:', hasShownInitialModal);
     if (!loading && accounts.length === 0 && !hasShownInitialModal) {
-      console.log('Showing Add Account modal');
       setShowAddAccountModal(true);
       setHasShownInitialModal(true);
     }
     
     // Reset hasShownInitialModal when accounts are added back
     if (accounts.length > 0 && hasShownInitialModal) {
-      console.log('Accounts available, resetting hasShownInitialModal');
       setHasShownInitialModal(false);
     }
   }, [loading, accounts.length, hasShownInitialModal]);
@@ -64,99 +52,68 @@ function App() {
   };
 
   const handleDismissModal = () => {
-    console.log('Dismissing Add Account modal');
     setShowAddAccountModal(false);
     setHasShownInitialModal(true);
   };
 
   const handleRefreshEmails = async () => {
-    console.log('App: handleRefreshEmails called, accounts:', accounts.length);
-    console.log('App: Accounts:', accounts);
+    if (accounts.length === 0) return;
     
-    if (accounts.length > 0) {
-      const currentAccount = accounts[0];
-      console.log('App: Using current account:', currentAccount.id, currentAccount.email);
+    const currentAccount = accounts[0];
+    
+    try {
+      // Step 1: Refresh folders to get latest Gmail labels
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 20, step: 'Refreshing folders...' } 
+      }));
+      await window.electronAPI.refreshFolders(currentAccount.id);
       
-      try {
-        console.log('App: Starting sync and refresh for account:', currentAccount.id, currentAccount.email);
-        console.log('App: Account provider:', currentAccount.provider);
-        console.log('App: Has OAuth token:', !!currentAccount.oauthToken);
-        
-        // Step 1: Refresh folders to get latest Gmail labels
-        console.log('App: Step 1 - Calling refreshFolders...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 20, step: 'Refreshing folders...' } 
-        }));
-        await window.electronAPI.refreshFolders(currentAccount.id);
-        console.log('App: Folder refresh completed successfully');
-        
-        // Step 2: Wait a moment for folder data to be processed
-        console.log('App: Step 2 - Waiting for folder processing...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 40, step: 'Processing folders...' } 
-        }));
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Step 3: Refresh sidebar folders to update UI
-        console.log('App: Step 3 - Refreshing sidebar folders...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 60, step: 'Updating folder list...' } 
-        }));
-        if ((window as any).refreshSidebarFolders) {
-          await (window as any).refreshSidebarFolders();
-          console.log('App: Sidebar folders refreshed successfully');
-        } else {
-          console.log('App: refreshSidebarFolders function not found');
-        }
-        
-        // Step 4: Sync all folders to get latest emails
-        console.log('App: Step 4 - Calling syncAllFolders...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 80, step: 'Syncing emails...' } 
-        }));
-        await window.electronAPI.syncAllFolders(currentAccount.id);
-        console.log('App: All folders sync completed successfully');
-        
-        // Step 5: Wait a moment for email data to be processed
-        console.log('App: Step 5 - Waiting for email processing...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 90, step: 'Processing emails...' } 
-        }));
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Step 6: Refresh the email list
-        console.log('App: Step 6 - Calling refreshEmails...');
-        window.dispatchEvent(new CustomEvent('refreshProgress', { 
-          detail: { progress: 95, step: 'Updating email list...' } 
-        }));
-        await refreshEmails(currentAccount.id);
-        console.log('App: Email refresh completed successfully');
-        
-        console.log('App: All refresh operations completed successfully!');
-        
-        // Trigger a global refresh event to notify all components
-        window.dispatchEvent(new CustomEvent('refreshCompleted', { 
-          detail: { success: true, accountId: currentAccount.id } 
-        }));
-        
-      } catch (error) {
-        console.error('App: Failed to sync and refresh emails:', error);
-        console.error('App: Error details:', {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined
-        });
-        
-        // Trigger a global refresh event to notify all components of failure
-        window.dispatchEvent(new CustomEvent('refreshCompleted', { 
-          detail: { success: false, error: error instanceof Error ? error.message : 'Unknown error' } 
-        }));
+      // Step 2: Wait a moment for folder data to be processed
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 40, step: 'Processing folders...' } 
+      }));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Step 3: Refresh sidebar folders to update UI
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 60, step: 'Updating folder list...' } 
+      }));
+      if ((window as any).refreshSidebarFolders) {
+        await (window as any).refreshSidebarFolders();
       }
-    } else {
-      console.log('App: No accounts available to sync');
+      
+      // Step 4: Sync all folders to get latest emails
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 80, step: 'Syncing emails...' } 
+      }));
+      await window.electronAPI.syncAllFolders(currentAccount.id);
+      
+      // Step 5: Wait a moment for email data to be processed
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 90, step: 'Processing emails...' } 
+      }));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Step 6: Refresh the email list
+      window.dispatchEvent(new CustomEvent('refreshProgress', { 
+        detail: { progress: 95, step: 'Updating email list...' } 
+      }));
+      await refreshEmails(currentAccount.id);
+      
+      // Trigger a global refresh event to notify all components
+      window.dispatchEvent(new CustomEvent('refreshCompleted', { 
+        detail: { success: true, accountId: currentAccount.id } 
+      }));
+      
+    } catch (error) {
+      console.error('Failed to sync and refresh emails:', error);
+      
+      // Trigger a global refresh event to notify all components of failure
+      window.dispatchEvent(new CustomEvent('refreshCompleted', { 
+        detail: { success: false, error: error instanceof Error ? error.message : 'Unknown error' } 
+      }));
     }
   };
-
-
 
   if (loading) {
     return (

@@ -27,33 +27,26 @@ export function useEmails() {
       setCurrentAccountId(accountId);
       setCurrentFolderId(folderId);
       
-      console.log('useEmails: Fetching emails for account:', accountId, 'folder:', folderId, 'limit:', limit, 'offset:', reset ? 0 : offset);
-      
       // First, let's check if we have folders for this account
       const folders = await window.electronAPI.getFolders(accountId);
-      console.log('useEmails: Available folders:', folders);
       
       // Use the provided folderId directly, but validate it exists
       let targetFolderId = folderId;
       if (folders.length === 0) {
-        console.log('useEmails: No folders found, using default folder ID');
         targetFolderId = 1; // Use default inbox folder ID
       } else {
         // Check if the requested folderId exists in the folders
         const requestedFolder = folders.find(folder => folder.id === folderId);
         if (requestedFolder) {
           targetFolderId = folderId;
-          console.log('useEmails: Using requested folder:', requestedFolder.name, 'ID:', targetFolderId);
         } else {
           // Fallback to inbox folder if requested folder doesn't exist
           const inboxFolder = folders.find(folder => folder.type === 'inbox' || folder.name.toLowerCase().includes('inbox'));
           if (inboxFolder) {
             targetFolderId = inboxFolder.id;
-            console.log('useEmails: Requested folder not found, using inbox folder:', inboxFolder.name, 'ID:', targetFolderId);
           } else {
             // Fallback to first folder if no inbox found
             targetFolderId = folders[0].id;
-            console.log('useEmails: No inbox folder found, using first folder:', folders[0].name, 'ID:', targetFolderId);
           }
         }
       }
@@ -62,8 +55,6 @@ export function useEmails() {
       const result = await window.electronAPI.getMessages(targetFolderId, limit, currentOffset);
       const emailsData = result.messages;
       const totalEmails = result.total;
-      
-      console.log('useEmails: Fetched emails:', emailsData.length, 'emails out of', totalEmails, 'total');
       
       if (reset) {
         setEmails(emailsData);
@@ -79,11 +70,8 @@ export function useEmails() {
       }
       
       // Check if we have more emails to load
-      // If we've loaded fewer emails than the total, there are more
       const currentTotal = reset ? emailsData.length : offset + emailsData.length;
       setHasMore(currentTotal < totalEmails);
-      
-      console.log('useEmails: Loaded', currentTotal, 'out of', totalEmails, 'total emails, hasMore:', currentTotal < totalEmails);
       
       return emailsData;
     } catch (err) {
@@ -98,13 +86,10 @@ export function useEmails() {
 
   const loadMoreEmails = async () => {
     if (loadingMore || !hasMore || !currentAccountId) return;
-    
-    console.log('useEmails: Loading more emails...');
     await fetchEmails(currentAccountId, currentFolderId, false);
   };
 
   const refreshEmails = async (accountId: number) => {
-    console.log('useEmails: Refreshing emails for account:', accountId);
     // Clear the current emails and reset state
     setEmails([]);
     setOffset(0);
@@ -120,25 +105,20 @@ export function useEmails() {
   useEffect(() => {
     const unsubscribe = window.electronAPI.onDataEvent(async (payload: any) => {
       try {
-        console.log('useEmails: Received data event:', payload?.type, 'for account:', payload?.accountId, 'current account:', currentAccountId);
-        
         if (payload?.type === 'emails:synced' || payload?.type === 'emails:all-synced') {
           if (currentAccountId && payload.accountId === currentAccountId) {
-            console.log('useEmails: Refreshing emails after sync event');
             // Wait a moment for the database to be fully updated
             await new Promise(resolve => setTimeout(resolve, 500));
             await fetchEmails(currentAccountId, currentFolderId, true);
           }
         } else if (payload?.type === 'folders:refreshed') {
           if (currentAccountId && payload.accountId === currentAccountId) {
-            console.log('useEmails: Refreshing emails after folder refresh');
             // Wait a moment for the folders to be fully updated
             await new Promise(resolve => setTimeout(resolve, 500));
             await fetchEmails(currentAccountId, currentFolderId, true);
           }
         } else if (payload?.type === 'account:deleted') {
           // Clear local state when an account is deleted
-          console.log('useEmails: Clearing emails after account deletion');
           setEmails([]);
           setHasMore(false);
           setOffset(0);
@@ -147,7 +127,6 @@ export function useEmails() {
         }
       } catch (e) {
         console.error('useEmails: Error handling data event:', e);
-        // ignore
       }
     });
     return () => {

@@ -10,29 +10,20 @@ export function useAccounts() {
     try {
       setLoading(true);
       setError(null);
-      console.log('useAccounts: Loading accounts... (instance:', Math.random().toString(36).substr(2, 9) + ')');
       const accountsData = await window.electronAPI.getAccounts();
-      console.log('useAccounts: Loaded accounts:', accountsData);
       setAccounts(accountsData);
     } catch (err) {
       console.error('useAccounts: Error loading accounts:', err);
       setError(err instanceof Error ? err.message : 'Failed to load accounts');
     } finally {
       setLoading(false);
-      console.log('useAccounts: Loading finished');
     }
   };
 
   const addAccount = async (account: Omit<EmailAccount, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      console.log('useAccounts: Adding account:', account);
       const newAccount = await window.electronAPI.addAccount(account);
-      console.log('useAccounts: New account returned:', newAccount);
-      setAccounts(prev => {
-        const updated = [...prev, newAccount];
-        console.log('useAccounts: Updated accounts list:', updated);
-        return updated;
-      });
+      setAccounts(prev => [...prev, newAccount]);
       
       // Trigger a global refresh event to notify all components
       window.dispatchEvent(new CustomEvent('accountsChanged', { 
@@ -60,15 +51,9 @@ export function useAccounts() {
 
   const deleteAccount = async (id: number) => {
     try {
-      console.log('useAccounts: Deleting account with ID:', id);
       const success = await window.electronAPI.deleteAccount(id);
-      console.log('useAccounts: Delete result:', success);
       if (success) {
-        setAccounts(prev => {
-          const filtered = prev.filter(acc => acc.id !== id);
-          console.log('useAccounts: Updated accounts list:', filtered);
-          return filtered;
-        });
+        setAccounts(prev => prev.filter(acc => acc.id !== id));
         
         // Trigger a global refresh event to notify all components
         window.dispatchEvent(new CustomEvent('accountsChanged', { 
