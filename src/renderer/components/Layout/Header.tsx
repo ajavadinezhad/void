@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { EmailAccount } from '@/shared/types';
+import { useTheme } from '@/renderer/hooks/useTheme';
 import { 
   Bars3Icon, 
   PlusIcon, 
-  MagnifyingGlassIcon,
   Cog6ToothIcon,
   ArrowPathIcon,
   UserIcon,
   ArrowDownTrayIcon,
-  SparklesIcon
+  SparklesIcon,
+  SunIcon,
+  MoonIcon,
+  ComputerDesktopIcon
 } from '@heroicons/react/24/outline';
+
+// GitHub icon component
+const GitHubIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+  </svg>
+);
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -18,12 +28,12 @@ interface HeaderProps {
   accounts: EmailAccount[];
   loading: boolean;
   onRefreshEmails?: () => void;
-  onSearch?: (query: string) => void;
   onToggleAI?: () => void;
   isAIOpen?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, accounts, loading, onRefreshEmails, onSearch, onToggleAI, isAIOpen }) => {
+const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, accounts, loading, onRefreshEmails, onToggleAI, isAIOpen }) => {
+  const { theme, updateTheme } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(0);
   const [refreshStep, setRefreshStep] = useState('');
@@ -111,6 +121,8 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
     }
   };
 
+
+
   // Generate initials from email
   const getInitials = (email: string) => {
     const parts = email.split('@')[0]; // Get part before @
@@ -193,6 +205,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
         </button>
         
         <div className="flex items-center space-x-2">
+          {/* Core Email Actions */}
           <button 
             onClick={handleRefresh}
             disabled={!currentAccount || isRefreshing}
@@ -202,13 +215,10 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
             <ArrowPathIcon className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           
-          <Link
-            to="/settings"
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Cog6ToothIcon className="h-5 w-5" />
-          </Link>
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
           
+          {/* Smart Features */}
           <button
             onClick={onToggleAI}
             className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
@@ -218,33 +228,61 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
           >
             <SparklesIcon className="h-5 w-5" />
           </button>
+          
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+          
+          {/* System & External */}
           <button
             onClick={handleCheckUpdates}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-1 ${updateStatus ? 'animate-pulse' : ''}`}
+            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${updateStatus ? 'animate-pulse' : ''}`}
             title={updateStatus ? updateStatus : 'Check for updates'}
           >
             <ArrowDownTrayIcon className={`h-5 w-5 ${updateStatus?.startsWith('Update') ? 'text-green-500' : ''}`} />
           </button>
+          
+          <a
+            href="https://github.com/your-username/void-email-client"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="View on GitHub"
+          >
+            <GitHubIcon className="h-6 w-6" />
+          </a>
+          
+          {/* Theme Toggle */}
+          <button
+            onClick={() => {
+              const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
+              const currentIndex = themes.indexOf(theme);
+              const nextTheme = themes[(currentIndex + 1) % themes.length];
+              updateTheme(nextTheme);
+            }}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title={`Theme: ${theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}`}
+          >
+            {theme === 'light' && <SunIcon className="h-5 w-5" />}
+            {theme === 'dark' && <MoonIcon className="h-5 w-5" />}
+            {theme === 'system' && <ComputerDesktopIcon className="h-5 w-5" />}
+          </button>
+          
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+          
+          {/* Settings - Last Item */}
+          <Link
+            to="/settings"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Settings"
+          >
+            <Cog6ToothIcon className="h-5 w-5" />
+          </Link>
         </div>
       </div>
 
-      {/* Center - Search */}
-      <div className="flex-1 max-w-md mx-4">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search emails..."
-            className="input pl-10"
-            onChange={(e) => onSearch?.(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                onSearch?.(e.currentTarget.value);
-              }
-            }}
-          />
-        </div>
-      </div>
+            {/* Center - Spacer */}
+      <div className="flex-1" />
 
       {/* Right side */}
       <div className="flex items-center space-x-2">

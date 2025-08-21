@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/renderer/hooks/useTheme';
 import { useAccounts } from '@/renderer/hooks/useAccounts';
 import { EmailAccount } from '@/shared/types';
 import { 
   Cog6ToothIcon,
-  SunIcon,
-  MoonIcon,
-  ComputerDesktopIcon,
   BellIcon,
   SpeakerWaveIcon,
   ShieldCheckIcon,
@@ -21,9 +17,7 @@ import AddAccountModal from '@/renderer/components/Account/AddAccountModal';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { theme, updateTheme } = useTheme();
   const { accounts, addAccount, deleteAccount, loadAccounts } = useAccounts();
-  console.log('Settings page - current theme:', theme);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
@@ -189,39 +183,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* Appearance */}
-        <div className="card p-6">
-          <div className="flex items-center mb-4">
-            <SunIcon className="h-6 w-6 text-yellow-500 mr-3" />
-            <h2 className="text-lg font-semibold">Appearance</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Theme</label>
-              <div className="flex space-x-2">
-                {[
-                  { value: 'light', icon: SunIcon, label: 'Light' },
-                  { value: 'dark', icon: MoonIcon, label: 'Dark' },
-                  { value: 'system', icon: ComputerDesktopIcon, label: 'System' }
-                ].map(({ value, icon: Icon, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => updateTheme(value as any)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
-                      theme === value
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         {/* Notifications */}
         <div className="card p-6">

@@ -156,15 +156,7 @@ function App() {
     }
   };
 
-  const handleSearch = (query: string) => {
-    console.log('App: Search query:', query);
-    // Call the search function exposed by EmailView
-    if ((window as any).handleEmailSearch) {
-      (window as any).handleEmailSearch(query);
-    } else {
-      console.log('App: EmailView search function not available yet');
-    }
-  };
+
 
   if (loading) {
     return (
@@ -186,7 +178,6 @@ function App() {
               accounts={accounts} 
               loading={loading} 
               onRefreshEmails={handleRefreshEmails} 
-              onSearch={handleSearch}
               onToggleAI={() => setIsAIOpen(!isAIOpen)}
               isAIOpen={isAIOpen}
             />

@@ -623,23 +623,33 @@ export class DatabaseService {
   async searchMessages(query: string, folderId?: number, limit: number = 50): Promise<EmailMessage[]> {
     if (!this.db) throw new Error('Database not initialized');
     
-    // Clean and escape the search query for FTS5
-    const cleanQuery = query.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    console.log('DatabaseService: Searching for query:', query, 'in folder:', folderId);
     
-    if (!cleanQuery) {
+    // Parse advanced search query
+    const searchConditions = this.parseSearchQuery(query);
+    
+    if (searchConditions.length === 0 && !query.trim()) {
       return [];
     }
     
-    console.log('DatabaseService: Searching for query:', cleanQuery, 'in folder:', folderId);
+    let sql = 'SELECT * FROM messages WHERE 1=1';
+    const params: any[] = [];
     
-    // Use a simpler LIKE-based search instead of FTS5 for now
-    let sql = `
-      SELECT * FROM messages 
-      WHERE (subject LIKE ? OR sender LIKE ? OR body LIKE ? OR recipients LIKE ?)
-    `;
-    
-    const searchTerm = `%${cleanQuery}%`;
-    const params: any[] = [searchTerm, searchTerm, searchTerm, searchTerm];
+    // Add search conditions
+    if (searchConditions.length > 0) {
+      for (const condition of searchConditions) {
+        sql += ` AND ${condition.sql}`;
+        params.push(...condition.params);
+      }
+    } else {
+      // Fallback to basic search
+      const cleanQuery = query.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (cleanQuery) {
+        const searchTerm = `%${cleanQuery}%`;
+        sql += ' AND (subject LIKE ? OR sender LIKE ? OR body LIKE ? OR recipients LIKE ?)';
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      }
+    }
     
     if (folderId) {
       sql += ' AND folder_id = ?';
@@ -658,6 +668,76 @@ export class DatabaseService {
     console.log('DatabaseService: Search results:', results.length, 'emails found');
     
     return results;
+  }
+
+  private parseSearchQuery(query: string): Array<{sql: string, params: any[]}> {
+    const conditions: Array<{sql: string, params: any[]}> = [];
+    
+    // Parse subject filter
+    const subjectMatch = query.match(/subject:"([^"]+)"/);
+    if (subjectMatch) {
+      conditions.push({
+        sql: 'subject LIKE ?',
+        params: [`%${subjectMatch[1]}%`]
+      });
+    }
+    
+    // Parse from filter
+    const fromMatch = query.match(/from:"([^"]+)"/);
+    if (fromMatch) {
+      conditions.push({
+        sql: 'sender LIKE ?',
+        params: [`%${fromMatch[1]}%`]
+      });
+    }
+    
+    // Parse read status
+    if (query.includes('is:read')) {
+      conditions.push({
+        sql: 'is_read = 1',
+        params: []
+      });
+    } else if (query.includes('is:unread')) {
+      conditions.push({
+        sql: 'is_read = 0',
+        params: []
+      });
+    }
+    
+    // Parse flagged status
+    if (query.includes('is:flagged')) {
+      conditions.push({
+        sql: 'is_flagged = 1',
+        params: []
+      });
+    }
+    
+    // Parse attachment filter
+    if (query.includes('has:attachment')) {
+      conditions.push({
+        sql: 'has_attachments = 1',
+        params: []
+      });
+    }
+    
+    // Parse date filters
+    const afterMatch = query.match(/after:(\d{4}-\d{2}-\d{2})/);
+    if (afterMatch) {
+      conditions.push({
+        sql: 'date >= ?',
+        params: [afterMatch[1]]
+      });
+    }
+    
+    const beforeMatch = query.match(/before:(\d{4}-\d{2}-\d{2})/);
+    if (beforeMatch) {
+      conditions.push({
+        sql: 'date <= ?',
+        params: [beforeMatch[1]]
+      });
+    }
+    
+    return conditions;
   }
 
   // Cleanup
