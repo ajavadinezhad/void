@@ -12,7 +12,8 @@ import {
   SparklesIcon,
   SunIcon,
   MoonIcon,
-  ComputerDesktopIcon
+  ComputerDesktopIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 
 // GitHub icon component
@@ -38,6 +39,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
   const [refreshProgress, setRefreshProgress] = useState(0);
   const [refreshStep, setRefreshStep] = useState('');
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [autoSync, setAutoSync] = useState(false);
 
   // Get the current account (first account for now)
   const currentAccount = accounts[0];
@@ -213,6 +215,18 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar, acco
             title="Sync & Refresh Emails"
           >
             <ArrowPathIcon className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+          
+          <button
+            onClick={() => setAutoSync(!autoSync)}
+            className={`p-2 rounded-lg transition-colors ${
+              autoSync 
+                ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            title={`Auto-sync: ${autoSync ? 'ON (5 min)' : 'OFF'}`}
+          >
+            <ClockIcon className="h-5 w-5" />
           </button>
           
           {/* Divider */}
