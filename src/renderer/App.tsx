@@ -74,13 +74,10 @@ function App() {
       }));
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Step 3: Refresh sidebar folders to update UI
+      // Step 3: Update progress
       window.dispatchEvent(new CustomEvent('refreshProgress', { 
         detail: { progress: 60, step: 'Updating folder list...' } 
       }));
-      if ((window as any).refreshSidebarFolders) {
-        await (window as any).refreshSidebarFolders();
-      }
       
       // Step 4: Sync all folders to get latest emails
       window.dispatchEvent(new CustomEvent('refreshProgress', { 

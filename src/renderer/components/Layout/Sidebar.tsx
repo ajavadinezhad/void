@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   InboxIcon, 
   PaperAirplaneIcon, 
@@ -30,6 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
 
   // Debug logging
   console.log('Sidebar render - collapsed:', collapsed, 'accounts:', accounts.length, 'folders:', folders.length);
+  console.log('Sidebar render - folders data:', folders);
 
   const handleCompose = () => {
     setIsComposeModalOpen(true);
@@ -51,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
     }
   };
 
-  const loadFolders = async () => {
+  const loadFolders = useCallback(async () => {
     console.log('Sidebar: loadFolders called, accounts:', accounts.length);
     const allFolders: EmailFolder[] = [];
     for (const account of accounts) {
@@ -59,14 +60,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
         console.log('Sidebar: Loading folders for account:', account.id, account.email);
         const accountFolders = await window.electronAPI.getFolders(account.id);
         console.log('Sidebar: Got folders for account', account.id, ':', accountFolders);
+        console.log('Sidebar: First folder sample:', accountFolders[0]);
         allFolders.push(...accountFolders);
       } catch (error) {
         console.error(`Failed to load folders for account ${account.id}:`, error);
       }
     }
     console.log('Sidebar: Setting all folders:', allFolders);
+    console.log('Sidebar: Folders length:', allFolders.length);
     setFolders(allFolders);
-  };
+  }, [accounts]);
 
   useEffect(() => {
     if (accounts.length > 0) {
@@ -99,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onFolderSelect }) => {
     return () => {
       delete (window as any).refreshSidebarFolders;
     };
-  }, [accounts]);
+  }, [loadFolders]);
 
   const toggleAccount = (accountId: number) => {
     const newExpanded = new Set(expandedAccounts);
