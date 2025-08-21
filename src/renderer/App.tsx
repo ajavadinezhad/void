@@ -139,9 +139,22 @@ function App() {
               isAIOpen={isAIOpen}
             />
           }>
-            <Route index element={<EmailView isAIOpen={isAIOpen} onToggleAI={() => setIsAIOpen(!isAIOpen)} />} />
-            <Route path="settings" element={<Settings />} />
+            <Route index element={
+              <div className="animate-in fade-in duration-300 ease-out">
+                <EmailView isAIOpen={isAIOpen} onToggleAI={() => setIsAIOpen(!isAIOpen)} />
+              </div>
+            } />
+            <Route path="settings" element={
+              <div className="animate-in slide-in-from-right duration-300 ease-out">
+                <Settings />
+              </div>
+            } />
           </Route>
+          <Route path="/welcome" element={
+            <div className="animate-in fade-in duration-500 ease-out">
+              <Welcome />
+            </div>
+          } />
         </Routes>
 
         {/* Add Account Modal */}

@@ -178,9 +178,9 @@ const EmailThread: React.FC<EmailThreadProps> = ({ threadId, onSendEmail }) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col animate-in fade-in duration-300 ease-out">
       {/* Thread Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 animate-in slide-in-from-right duration-300 ease-out">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
           {threadMessages[0]?.subject || '(No subject)'}
         </h1>

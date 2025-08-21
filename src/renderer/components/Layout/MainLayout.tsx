@@ -58,7 +58,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ accounts, loading, onRefreshEma
         />
         
         <main className="flex-1 overflow-y-auto custom-scrollbar">
-          <Outlet />
+          <div className="animate-in fade-in duration-300 ease-out">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

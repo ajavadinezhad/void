@@ -235,7 +235,8 @@ Email Context:
                 key={index}
                 onClick={action.action}
                 disabled={isLoading}
-                className="flex items-center space-x-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                className="flex items-center space-x-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 animate-in slide-in-from-top duration-300 ease-out"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <action.icon className="h-4 w-4" />
                 <span>{action.label}</span>
@@ -247,10 +248,11 @@ Email Context:
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-top duration-300 ease-out`}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
@@ -270,7 +272,7 @@ Email Context:
         ))}
         
         {isLoading && (
-          <div className="flex justify-start">
+          <div className="flex justify-start animate-in fade-in duration-300 ease-out">
             <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded-lg">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>

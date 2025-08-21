@@ -231,9 +231,9 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
   const displayLoading = searchQuery ? isSearching : loading;
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Main Email Area */}
-      <div className={`flex-1 flex flex-col ${isAIOpen ? 'mr-80' : ''}`}>
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Search and Filter Bar */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center space-x-4">
@@ -265,7 +265,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
 
               {/* Advanced Filters Dropdown */}
               {showAdvancedFilters && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 p-4">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 p-4 animate-in slide-in-from-top-2 duration-300 ease-out">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -275,7 +275,8 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
                         type="text"
                         value={searchFilters.subject}
                         onChange={(e) => handleFilterChange('subject', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter subject..."
                       />
                     </div>
 
@@ -287,7 +288,8 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
                         type="text"
                         value={searchFilters.sender}
                         onChange={(e) => handleFilterChange('sender', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter sender email..."
                       />
                     </div>
 
@@ -300,7 +302,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
                           type="date"
                           value={searchFilters.dateFrom}
                           onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -311,7 +313,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
                           type="date"
                           value={searchFilters.dateTo}
                           onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -337,10 +339,10 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
                       </label>
                     </div>
 
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 pt-2">
                       <button
                         onClick={applyFilters}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
                       >
                         Apply Filters
                       </button>
@@ -369,7 +371,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
               </button>
 
               {showSortDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 animate-in slide-in-from-top-2 duration-300 ease-out">
                   <div className="py-1">
                     {(['date', 'subject', 'sender', 'size'] as const).map((field) => (
                       <button
@@ -420,7 +422,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
 
       {/* Email Detail/Thread Panel */}
       {(selectedMessage || selectedThreadId) && (
-        <div className="w-1/2 border-l border-gray-200 dark:border-gray-700">
+        <div className="flex-1 min-w-0 border-l border-gray-200 dark:border-gray-700 animate-in slide-in-from-right duration-300 ease-out">
           {selectedThreadId ? (
             <EmailThread
               threadId={selectedThreadId}
@@ -437,7 +439,7 @@ const EmailView: React.FC<EmailViewProps> = ({ isAIOpen = false, onToggleAI }) =
 
       {/* AI Assistant Panel */}
       {isAIOpen && (
-        <div className="w-80 border-l border-gray-200 dark:border-gray-700">
+        <div className="w-80 border-l border-gray-200 dark:border-gray-700 flex-shrink-0 animate-in slide-in-from-right duration-300 ease-out">
           <AIAssistant 
             isOpen={isAIOpen}
             onClose={onToggleAI || (() => {})}

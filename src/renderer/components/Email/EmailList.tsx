@@ -101,7 +101,7 @@ const EmailList: React.FC<EmailListProps> = ({
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-center animate-in fade-in duration-300 ease-out">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -109,7 +109,7 @@ const EmailList: React.FC<EmailListProps> = ({
 
   if (messages.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 animate-in fade-in duration-300 ease-out">
         <div className="text-center">
           <EnvelopeIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>No emails found</p>
@@ -139,13 +139,14 @@ const EmailList: React.FC<EmailListProps> = ({
 
       {/* Email List */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
             onClick={() => onMessageSelect(message)}
             className={`email-item ${!message.isRead ? 'unread' : ''} ${
               selectedMessageId === message.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-            }`}
+            } animate-in slide-in-from-top duration-300 ease-out`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               {/* Read/Unread indicator */}
@@ -201,7 +202,7 @@ const EmailList: React.FC<EmailListProps> = ({
           
           {/* Loading More Indicator */}
           {loadingMore && (
-            <div className="flex items-center justify-center py-4">
+            <div className="flex items-center justify-center py-4 animate-in fade-in duration-300 ease-out">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
               <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading more emails...</span>
             </div>
