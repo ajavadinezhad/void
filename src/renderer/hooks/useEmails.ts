@@ -10,7 +10,7 @@ export function useEmails() {
   const [currentFolderId, setCurrentFolderId] = useState<number>(1);
   const [currentAccountId, setCurrentAccountId] = useState<number | null>(null);
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(20); // Number of emails to fetch per page
+  const limit = 15; // Optimized batch size for smooth scrolling
 
   const fetchEmails = async (accountId: number, folderId: number = 1, reset: boolean = true) => {
     try {
@@ -70,8 +70,18 @@ export function useEmails() {
       }
       
       // Check if we have more emails to load
-      const currentTotal = reset ? emailsData.length : offset + emailsData.length;
-      setHasMore(currentTotal < totalEmails);
+      const actualLoadedCount = reset ? emailsData.length : offset + emailsData.length;
+      setHasMore(actualLoadedCount < totalEmails);
+      
+      console.log('useEmails: hasMore calculation', {
+        actualLoadedCount,
+        totalEmails,
+        emailsDataLength: emailsData.length,
+        currentEmailsLength: emails.length,
+        offset,
+        hasMore: actualLoadedCount < totalEmails,
+        reset
+      });
       
       return emailsData;
     } catch (err) {
@@ -85,7 +95,23 @@ export function useEmails() {
   };
 
   const loadMoreEmails = async () => {
-    if (loadingMore || !hasMore || !currentAccountId) return;
+    console.log('useEmails: loadMoreEmails called', { 
+      loadingMore, 
+      hasMore, 
+      currentAccountId, 
+      offset,
+      currentEmailsLength: emails.length 
+    });
+    if (loadingMore || !hasMore || !currentAccountId) {
+      console.log('useEmails: loadMoreEmails early return', { 
+        loadingMore, 
+        hasMore, 
+        currentAccountId,
+        reason: loadingMore ? 'loading' : !hasMore ? 'no more emails' : 'no account'
+      });
+      return;
+    }
+    console.log('useEmails: fetching more emails...');
     await fetchEmails(currentAccountId, currentFolderId, false);
   };
 

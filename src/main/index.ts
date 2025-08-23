@@ -17,10 +17,10 @@ class MainProcess {
 
   constructor() {
     this.databaseService = new DatabaseService();
+    this.emailService = new EmailService(this.databaseService);
     this.oauthService = new OAuthService();
-    this.emailService = new EmailService(this.databaseService, this.oauthService);
     this.settingsService = new SettingsService();
-    this.aiService = new AIService();
+    this.aiService = new AIService(this.settingsService);
   }
 
   async initialize() {
@@ -177,7 +177,12 @@ class MainProcess {
     ipcMain.handle('ai:extract-action-items', (_, email, model) => this.aiService.extractActionItems(email, model));
     ipcMain.handle('ai:analyze-tone', (_, email, model) => this.aiService.analyzeTone(email, model));
     ipcMain.handle('ai:get-config', () => this.aiService.getConfig());
-    ipcMain.handle('ai:update-config', (_, config) => this.aiService.updateConfig(config));
+    ipcMain.handle('ai:update-config', (_, config) => {
+      console.log('Main: Received ai:update-config with:', config);
+      return this.aiService.updateConfig(config);
+    });
+    ipcMain.handle('ai:get-features', () => this.settingsService.getAIFeatures());
+    ipcMain.handle('ai:set-features', (_, features) => this.settingsService.setAIFeatures(features));
 
     // File operations
     ipcMain.handle('file:select-attachments', async () => {

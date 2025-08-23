@@ -15,6 +15,35 @@ export class SettingsService {
       searchEnabled: false,
       summarizationEnabled: false,
       privacyRedactionEnabled: false
+    },
+    openai: {
+      apiKey: '',
+      model: 'gpt-5'
+    },
+    claude: {
+      apiKey: '',
+      model: 'claude-3-sonnet-20240229'
+    },
+    // Free AI Providers
+    ollama: {
+      baseUrl: 'http://localhost:11434',
+      model: 'llama3.2'
+    },
+    huggingface: {
+      apiKey: '',
+      model: 'microsoft/DialoGPT-medium'
+    },
+    cohere: {
+      apiKey: '',
+      model: 'command'
+    },
+    groq: {
+      apiKey: '',
+      model: 'llama3-8b-8192'
+    },
+    together: {
+      apiKey: '',
+      model: 'togethercomputer/llama-3.1-8b-instruct'
     }
   };
 
@@ -130,6 +159,81 @@ export class SettingsService {
     const currentFeatures = await this.getAIFeatures();
     const updatedFeatures = { ...currentFeatures, ...features };
     await this.updateSettings({ aiFeatures: updatedFeatures });
+  }
+
+  async getAIConfig(): Promise<{ 
+    openai: { apiKey: string; model: string }; 
+    claude: { apiKey: string; model: string };
+    ollama: { baseUrl: string; model: string };
+    huggingface: { apiKey: string; model: string };
+    cohere: { apiKey: string; model: string };
+    groq: { apiKey: string; model: string };
+    together: { apiKey: string; model: string };
+  }> {
+    const settings = await this.getSettings();
+    console.log('SettingsService: Getting AI config from settings:', { 
+      openai: settings.openai, 
+      claude: settings.claude,
+      ollama: settings.ollama,
+      huggingface: settings.huggingface,
+      cohere: settings.cohere,
+      groq: settings.groq,
+      together: settings.together
+    });
+    const config = {
+      openai: {
+        apiKey: settings.openai?.apiKey || '',
+        model: settings.openai?.model || 'gpt-5'
+      },
+      claude: {
+        apiKey: settings.claude?.apiKey || '',
+        model: settings.claude?.model || 'claude-3-sonnet-20240229'
+      },
+      ollama: {
+        baseUrl: settings.ollama?.baseUrl || 'http://localhost:11434',
+        model: settings.ollama?.model || 'llama3.2'
+      },
+      huggingface: {
+        apiKey: settings.huggingface?.apiKey || '',
+        model: settings.huggingface?.model || 'microsoft/DialoGPT-medium'
+      },
+      cohere: {
+        apiKey: settings.cohere?.apiKey || '',
+        model: settings.cohere?.model || 'command'
+      },
+      groq: {
+        apiKey: settings.groq?.apiKey || '',
+        model: settings.groq?.model || 'llama3-8b-8192'
+      },
+      together: {
+        apiKey: settings.together?.apiKey || '',
+        model: settings.together?.model || 'togethercomputer/llama-3.1-8b-instruct'
+      }
+    };
+    console.log('SettingsService: Returning AI config:', config);
+    return config;
+  }
+
+  async saveAIConfig(config: { 
+    openai: { apiKey: string; model: string }; 
+    claude: { apiKey: string; model: string };
+    ollama: { baseUrl: string; model: string };
+    huggingface: { apiKey: string; model: string };
+    cohere: { apiKey: string; model: string };
+    groq: { apiKey: string; model: string };
+    together: { apiKey: string; model: string };
+  }): Promise<void> {
+    console.log('SettingsService: Saving AI config:', config);
+    await this.updateSettings({
+      openai: config.openai,
+      claude: config.claude,
+      ollama: config.ollama,
+      huggingface: config.huggingface,
+      cohere: config.cohere,
+      groq: config.groq,
+      together: config.together
+    });
+    console.log('SettingsService: AI config saved successfully');
   }
 
   // Reset to default settings

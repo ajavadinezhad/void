@@ -36,6 +36,8 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     analyzeTone: (email, model) => electron_1.ipcRenderer.invoke('ai:analyze-tone', email, model),
     getAIConfig: () => electron_1.ipcRenderer.invoke('ai:get-config'),
     updateAIConfig: (config) => electron_1.ipcRenderer.invoke('ai:update-config', config),
+    getAIFeatures: () => electron_1.ipcRenderer.invoke('ai:get-features'),
+    setAIFeatures: (features) => electron_1.ipcRenderer.invoke('ai:set-features', features),
     // File operations
     selectAttachments: () => electron_1.ipcRenderer.invoke('file:select-attachments'),
     // Window operations

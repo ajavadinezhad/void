@@ -11,7 +11,8 @@ import {
   PlusIcon,
   TrashIcon,
   ArrowLeftIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import AddAccountModal from '@/renderer/components/Account/AddAccountModal';
 
@@ -23,7 +24,37 @@ const Settings: React.FC = () => {
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<EmailAccount | null>(null);
+  const [aiFeatures, setAiFeatures] = useState({
+    writingEnabled: false,
+    searchEnabled: false,
+    summarizationEnabled: false,
+    privacyRedactionEnabled: false
+  });
   const [highlightAccounts, setHighlightAccounts] = useState(true);
+
+  // Load AI features on mount
+  useEffect(() => {
+    loadAIFeatures();
+  }, []);
+
+  const loadAIFeatures = async () => {
+    try {
+      const features = await window.electronAPI.getAIFeatures();
+      setAiFeatures(features);
+    } catch (error) {
+      console.error('Failed to load AI features:', error);
+    }
+  };
+
+  const handleAIFeatureChange = async (feature: keyof typeof aiFeatures, enabled: boolean) => {
+    try {
+      const updatedFeatures = { ...aiFeatures, [feature]: enabled };
+      await window.electronAPI.setAIFeatures(updatedFeatures);
+      setAiFeatures(updatedFeatures);
+    } catch (error) {
+      console.error('Failed to update AI feature:', error);
+    }
+  };
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -232,6 +263,91 @@ const Settings: React.FC = () => {
         </div>
 
 
+
+        {/* AI Features Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <SparklesIcon className="h-6 w-6 text-blue-600 mr-2" />
+            AI Features
+          </h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Writing Assistant</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Help draft and improve email responses</p>
+              </div>
+              <button
+                onClick={() => handleAIFeatureChange('writingEnabled', !aiFeatures.writingEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  aiFeatures.writingEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    aiFeatures.writingEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Smart Search</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered email search and filtering</p>
+              </div>
+              <button
+                onClick={() => handleAIFeatureChange('searchEnabled', !aiFeatures.searchEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  aiFeatures.searchEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    aiFeatures.searchEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Email Summarization</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Automatically summarize long emails</p>
+              </div>
+              <button
+                onClick={() => handleAIFeatureChange('summarizationEnabled', !aiFeatures.summarizationEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  aiFeatures.summarizationEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    aiFeatures.summarizationEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Privacy Redaction</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Automatically redact sensitive information</p>
+              </div>
+              <button
+                onClick={() => handleAIFeatureChange('privacyRedactionEnabled', !aiFeatures.privacyRedactionEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  aiFeatures.privacyRedactionEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    aiFeatures.privacyRedactionEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
 
 
       </div>

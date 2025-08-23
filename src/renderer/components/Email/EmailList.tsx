@@ -30,17 +30,43 @@ const EmailList: React.FC<EmailListProps> = ({
   hasMore,
   onLoadMore
 }) => {
+  console.log('EmailList: Component rendered with props', {
+    messagesLength: messages.length,
+    hasMore,
+    loadingMore,
+    hasOnLoadMore: !!onLoadMore
+  });
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll detection for infinite loading
   const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current || !hasMore || loadingMore || !onLoadMore) return;
+    console.log('EmailList: Scroll event triggered');
+    
+    if (!scrollContainerRef.current || !hasMore || loadingMore || !onLoadMore) {
+      console.log('EmailList: Scroll check skipped', { 
+        hasContainer: !!scrollContainerRef.current, 
+        hasMore, 
+        loadingMore, 
+        hasOnLoadMore: !!onLoadMore 
+      });
+      return;
+    }
 
     const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100; // Load when 100px from bottom
 
+    console.log('EmailList: Scroll position', { 
+      scrollTop, 
+      scrollHeight, 
+      clientHeight, 
+      isNearBottom,
+      threshold: scrollHeight - 100 
+    });
+
     if (isNearBottom) {
       console.log('EmailList: Near bottom, triggering load more...');
+      console.log('EmailList: hasMore:', hasMore, 'loadingMore:', loadingMore);
       onLoadMore();
     }
   }, [hasMore, loadingMore, onLoadMore]);
@@ -48,6 +74,26 @@ const EmailList: React.FC<EmailListProps> = ({
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer) {
+      console.log('EmailList: Setting up scroll listener', {
+        hasMore,
+        loadingMore,
+        hasOnLoadMore: !!onLoadMore,
+        messagesLength: messages.length
+      });
+      
+      // Check initial scroll container dimensions
+      setTimeout(() => {
+        if (scrollContainer) {
+          const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+          console.log('EmailList: Initial scroll container dimensions', {
+            scrollTop,
+            scrollHeight,
+            clientHeight,
+            canScroll: scrollHeight > clientHeight
+          });
+        }
+      }, 100);
+      
       scrollContainer.addEventListener('scroll', handleScroll);
       return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
@@ -138,7 +184,7 @@ const EmailList: React.FC<EmailListProps> = ({
       </div>
 
       {/* Email List */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar" style={{ maxHeight: '700px' }}>
         {messages.map((message, index) => (
           <div
             key={message.id}

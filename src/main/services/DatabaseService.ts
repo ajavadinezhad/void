@@ -367,6 +367,16 @@ export class DatabaseService {
   async getMessages(folderId: number, limit: number = 50, offset: number = 0): Promise<{ messages: EmailMessage[], total: number }> {
     if (!this.db) throw new Error('Database not initialized');
     
+    console.log('DatabaseService: getMessages called', { folderId, limit, offset });
+    
+    // First, get the total count of messages in this folder
+    const countStmt = this.db.prepare('SELECT COUNT(*) as total FROM messages WHERE folder_id = ?');
+    const countResult = countStmt.get(folderId) as { total: number };
+    const total = countResult.total;
+    
+    console.log('DatabaseService: Total messages in folder', { folderId, total });
+    
+    // Then, get the paginated messages
     const stmt = this.db.prepare(`
       SELECT * FROM messages 
       WHERE folder_id = ? 
@@ -375,6 +385,14 @@ export class DatabaseService {
     `);
     
     const rawResult = stmt.all(folderId, limit, offset) as any[];
+    
+    console.log('DatabaseService: Retrieved messages', { 
+      folderId, 
+      limit, 
+      offset, 
+      messagesReturned: rawResult.length,
+      total 
+    });
     
     // Convert date strings to Date objects and boolean fields
     const result = rawResult.map(row => ({
@@ -391,7 +409,7 @@ export class DatabaseService {
       createdAt: new Date(row.created_at)
     })) as EmailMessage[];
     
-    return { messages: result, total: rawResult.length };
+    return { messages: result, total };
   }
 
   async getMessage(id: number): Promise<EmailMessage | null> {

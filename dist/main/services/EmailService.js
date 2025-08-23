@@ -354,7 +354,6 @@ class EmailService {
             // Gmail API includes 'labelIds' array - if 'UNREAD' is not present, message is read
             const labelIds = messageData.labelIds || [];
             const isRead = !labelIds.includes('UNREAD');
-            console.log('EmailService: Gmail message labelIds:', labelIds, 'isRead:', isRead);
             // Extract message details
             const headers = messageData.payload?.headers || [];
             const subject = headers.find((h) => h.name === 'Subject')?.value || '';
@@ -410,46 +409,7 @@ class EmailService {
                 isForwarded: false,
                 size: Number(messageData.sizeEstimate || 0)
             };
-            // Debug: Check the boolean types
-            console.log('EmailService: Boolean field types:', {
-                isRead: { value: emailMessage.isRead, type: typeof emailMessage.isRead, constructor: emailMessage.isRead?.constructor?.name },
-                isFlagged: { value: emailMessage.isFlagged, type: typeof emailMessage.isFlagged, constructor: emailMessage.isFlagged?.constructor?.name },
-                isAnswered: { value: emailMessage.isAnswered, type: typeof emailMessage.isAnswered, constructor: emailMessage.isAnswered?.constructor?.name },
-                isForwarded: { value: emailMessage.isForwarded, type: typeof emailMessage.isForwarded, constructor: emailMessage.isForwarded?.constructor?.name }
-            });
-            // Add to database
-            console.log('EmailService: Adding message to database:', {
-                subject: emailMessage.subject,
-                sender: emailMessage.sender,
-                date: emailMessage.date,
-                size: emailMessage.size,
-                bodyLength: emailMessage.body?.length || 0
-            });
-            // Debug: Log all fields being passed to SQLite
-            console.log('EmailService: SQLite parameters:', {
-                accountId: emailMessage.accountId,
-                folderId: emailMessage.folderId,
-                uid: emailMessage.uid,
-                threadId: emailMessage.threadId,
-                subject: emailMessage.subject,
-                sender: emailMessage.sender,
-                recipients: emailMessage.recipients,
-                cc: emailMessage.cc,
-                bcc: emailMessage.bcc,
-                body: emailMessage.body?.substring(0, 100) + '...',
-                htmlBody: emailMessage.htmlBody?.substring(0, 100) + '...',
-                date: emailMessage.date.toISOString(),
-                isRead: emailMessage.isRead,
-                isFlagged: emailMessage.isFlagged,
-                isAnswered: emailMessage.isAnswered,
-                isForwarded: emailMessage.isForwarded,
-                size: emailMessage.size
-            });
             const addedMessage = await this.databaseService.addMessage(emailMessage);
-            console.log('EmailService: Added message to database:', subject, 'with ID:', addedMessage.id);
-            // Verify the message was added
-            const verifyMessage = await this.databaseService.getMessage(addedMessage.id);
-            console.log('EmailService: Verification - message in database:', !!verifyMessage);
         }
         catch (error) {
             console.error('EmailService: Error processing Gmail message:', error);

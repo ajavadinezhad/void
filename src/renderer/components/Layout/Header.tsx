@@ -47,8 +47,110 @@ const Header: React.FC<HeaderProps> = ({
   const [refreshStep, setRefreshStep] = useState('');
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [autoSync, setAutoSync] = useState(false);
+  const [autoSyncInterval, setAutoSyncInterval] = useState<NodeJS.Timeout | null>(null);
+  const [aiFeatures, setAiFeatures] = useState({
+    writingEnabled: false,
+    searchEnabled: false,
+    summarizationEnabled: false,
+    privacyRedactionEnabled: false
+  });
 
+  // Get the current account (first account for now)
   const currentAccount = accounts[0];
+
+  // Load AI features and auto sync settings on mount
+  useEffect(() => {
+    loadAIFeatures();
+    loadAutoSyncSettings();
+  }, []);
+
+  // Load auto sync settings from storage
+  const loadAutoSyncSettings = async () => {
+    try {
+      const settings = await window.electronAPI.getSettings();
+      setAutoSync(settings.autoSync || false);
+    } catch (error) {
+      console.error('Failed to load auto sync settings:', error);
+    }
+  };
+
+  // Handle auto sync toggle
+  const handleAutoSyncToggle = async () => {
+    const newAutoSyncState = !autoSync;
+    setAutoSync(newAutoSyncState);
+    
+    try {
+      // Save to settings
+      await window.electronAPI.updateSettings({ autoSync: newAutoSyncState });
+      
+      // Start or stop auto sync interval
+      if (newAutoSyncState) {
+        startAutoSync();
+      } else {
+        stopAutoSync();
+      }
+    } catch (error) {
+      console.error('Failed to update auto sync settings:', error);
+      // Revert state if save failed
+      setAutoSync(!newAutoSyncState);
+    }
+  };
+
+  // Start auto sync interval
+  const startAutoSync = () => {
+    if (autoSyncInterval) {
+      clearInterval(autoSyncInterval);
+    }
+    
+    const interval = setInterval(async () => {
+      if (currentAccount && onRefreshEmails) {
+        console.log('Auto sync: Refreshing emails...');
+        try {
+          await onRefreshEmails();
+        } catch (error) {
+          console.error('Auto sync failed:', error);
+        }
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    setAutoSyncInterval(interval);
+  };
+
+  // Stop auto sync interval
+  const stopAutoSync = () => {
+    if (autoSyncInterval) {
+      clearInterval(autoSyncInterval);
+      setAutoSyncInterval(null);
+    }
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoSync();
+    };
+  }, []);
+
+  // Start auto sync when enabled and account is available
+  useEffect(() => {
+    if (autoSync && currentAccount) {
+      startAutoSync();
+    } else {
+      stopAutoSync();
+    }
+  }, [autoSync, currentAccount]);
+
+  const loadAIFeatures = async () => {
+    try {
+      const features = await window.electronAPI.getAIFeatures();
+      setAiFeatures(features);
+    } catch (error) {
+      console.error('Failed to load AI features:', error);
+    }
+  };
+
+  // Check if any AI features are enabled
+  const hasEnabledAIFeatures = Object.values(aiFeatures).some(enabled => enabled);
 
   // Listen for refresh progress and completion events
   useEffect(() => {
@@ -207,7 +309,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
             
             <button
-              onClick={() => setAutoSync(!autoSync)}
+              onClick={handleAutoSyncToggle}
               className={`p-2 rounded-lg transition-colors ${
                 autoSync 
                   ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800' 
@@ -224,12 +326,15 @@ const Header: React.FC<HeaderProps> = ({
             {/* Smart Features */}
             <button
               onClick={onToggleAI}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative ${
                 isAIOpen ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' : ''
               }`}
               title="AI Assistant"
             >
               <SparklesIcon className="h-5 w-5" />
+              {hasEnabledAIFeatures && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
+              )}
             </button>
             
             {/* Divider */}

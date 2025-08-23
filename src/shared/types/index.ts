@@ -83,6 +83,35 @@ export interface AppSettings {
     summarizationEnabled: boolean;
     privacyRedactionEnabled: boolean;
   };
+  openai?: {
+    apiKey: string;
+    model: string;
+  };
+  claude?: {
+    apiKey: string;
+    model: string;
+  };
+  // Free AI Providers
+  ollama?: {
+    baseUrl: string;
+    model: string;
+  };
+  huggingface?: {
+    apiKey: string;
+    model: string;
+  };
+  cohere?: {
+    apiKey: string;
+    model: string;
+  };
+  groq?: {
+    apiKey: string;
+    model: string;
+  };
+  together?: {
+    apiKey: string;
+    model: string;
+  };
 }
 
 // OAuth2 Types
@@ -167,4 +196,21 @@ export interface ComposeEmail {
   attachments?: File[];
   replyTo?: EmailMessage;
   forwardFrom?: EmailMessage;
+}
+
+// AI Types
+export interface AIMessageRequest {
+  message: string;
+  context: string;
+  model: 'openai' | 'claude' | 'ollama' | 'huggingface' | 'cohere' | 'groq' | 'together';
+  emails: EmailMessage[];
+}
+
+export interface AIResponse {
+  content: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }

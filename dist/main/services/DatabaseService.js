@@ -195,28 +195,19 @@ class DatabaseService {
     async deleteAccount(id) {
         if (!this.db)
             throw new Error('Database not initialized');
-        console.log('DatabaseService: Deleting account with ID:', id);
-        // Start a transaction to ensure all operations succeed or fail together
         const transaction = this.db.transaction(() => {
-            // 1. Delete all messages for this account
-            const deleteMessagesStmt = this.db.prepare('DELETE FROM messages WHERE account_id = ?');
-            const messagesDeleted = deleteMessagesStmt.run(id).changes;
-            console.log('DatabaseService: Deleted', messagesDeleted, 'messages for account', id);
-            // 2. Delete all folders for this account
-            const deleteFoldersStmt = this.db.prepare('DELETE FROM folders WHERE account_id = ?');
-            const foldersDeleted = deleteFoldersStmt.run(id).changes;
-            console.log('DatabaseService: Deleted', foldersDeleted, 'folders for account', id);
-            // 3. Delete all attachments for this account (if any)
-            const deleteAttachmentsStmt = this.db.prepare(`
-        DELETE FROM attachments 
-        WHERE message_id IN (SELECT id FROM messages WHERE account_id = ?)
-      `);
-            const attachmentsDeleted = deleteAttachmentsStmt.run(id).changes;
-            console.log('DatabaseService: Deleted', attachmentsDeleted, 'attachments for account', id);
-            // 4. Finally, delete the account itself
-            const deleteAccountStmt = this.db.prepare('DELETE FROM accounts WHERE id = ?');
-            const accountDeleted = deleteAccountStmt.run(id).changes;
-            console.log('DatabaseService: Deleted account:', accountDeleted > 0 ? 'success' : 'failed');
+            // Delete messages first
+            const messagesStmt = this.db.prepare('DELETE FROM messages WHERE account_id = ?');
+            const messagesDeleted = messagesStmt.run(id).changes;
+            // Delete folders
+            const foldersStmt = this.db.prepare('DELETE FROM folders WHERE account_id = ?');
+            const foldersDeleted = foldersStmt.run(id).changes;
+            // Delete attachments
+            const attachmentsStmt = this.db.prepare('DELETE FROM attachments WHERE account_id = ?');
+            const attachmentsDeleted = attachmentsStmt.run(id).changes;
+            // Finally delete the account
+            const accountStmt = this.db.prepare('DELETE FROM accounts WHERE id = ?');
+            const accountDeleted = accountStmt.run(id).changes;
             return {
                 messagesDeleted,
                 foldersDeleted,
@@ -224,15 +215,8 @@ class DatabaseService {
                 accountDeleted: accountDeleted > 0
             };
         });
-        try {
-            const result = transaction();
-            console.log('DatabaseService: Account deletion completed successfully:', result);
-            return result.accountDeleted;
-        }
-        catch (error) {
-            console.error('DatabaseService: Error deleting account:', error);
-            throw error;
-        }
+        const result = transaction();
+        return result.accountDeleted;
     }
     async getAccount(id) {
         if (!this.db)
@@ -321,7 +305,6 @@ class DatabaseService {
         // Update the folder with the new counts
         const updateStmt = this.db.prepare('UPDATE folders SET total_count = ?, unread_count = ? WHERE id = ?');
         updateStmt.run(totalResult.total, unreadResult.unread, folderId);
-        console.log('DatabaseService: Updated folder', folderId, 'counts - total:', totalResult.total, 'unread:', unreadResult.unread);
     }
     async updateAllFolderCounts(accountId) {
         if (!this.db)
@@ -332,36 +315,22 @@ class DatabaseService {
         for (const folder of folders) {
             await this.updateFolderCounts(folder.id);
         }
-        console.log('DatabaseService: Updated counts for all folders in account', accountId);
     }
     async clearMessagesForAccount(accountId) {
         if (!this.db)
             throw new Error('Database not initialized');
         const stmt = this.db.prepare('DELETE FROM messages WHERE account_id = ?');
         stmt.run(accountId);
-        console.log('DatabaseService: Cleared all messages for account', accountId);
     }
     // Message operations
     async getMessages(folderId, limit = 50, offset = 0) {
         if (!this.db)
             throw new Error('Database not initialized');
-        console.log('DatabaseService: getMessages called with folderId:', folderId, 'limit:', limit, 'offset:', offset);
-        // First, let's check what folders exist
-        const foldersStmt = this.db.prepare('SELECT * FROM folders');
-        const allFolders = foldersStmt.all();
-        console.log('DatabaseService: All folders in database:', allFolders);
-        // Check if the requested folder exists
-        const folderStmt = this.db.prepare('SELECT * FROM folders WHERE id = ?');
-        const folder = folderStmt.get(folderId);
-        console.log('DatabaseService: Requested folder:', folder);
-        // Check how many messages exist in total
-        const totalMessagesStmt = this.db.prepare('SELECT COUNT(*) as count FROM messages');
-        const totalMessages = totalMessagesStmt.get();
-        console.log('DatabaseService: Total messages in database:', totalMessages.count);
-        // Check how many messages exist for this folder
-        const folderMessagesStmt = this.db.prepare('SELECT COUNT(*) as count FROM messages WHERE folder_id = ?');
-        const folderMessages = folderMessagesStmt.get(folderId);
-        console.log('DatabaseService: Messages in folder', folderId, ':', folderMessages.count);
+        // First, get the total count of messages in this folder
+        const countStmt = this.db.prepare('SELECT COUNT(*) as total FROM messages WHERE folder_id = ?');
+        const countResult = countStmt.get(folderId);
+        const total = countResult.total;
+        // Then, get the paginated messages
         const stmt = this.db.prepare(`
       SELECT * FROM messages 
       WHERE folder_id = ? 
@@ -369,7 +338,6 @@ class DatabaseService {
       LIMIT ? OFFSET ?
     `);
         const rawResult = stmt.all(folderId, limit, offset);
-        console.log('DatabaseService: getMessages result:', rawResult.length, 'messages');
         // Convert date strings to Date objects and boolean fields
         const result = rawResult.map(row => ({
             ...row,
@@ -384,7 +352,7 @@ class DatabaseService {
             htmlBody: row.html_body,
             createdAt: new Date(row.created_at)
         }));
-        return { messages: result, total: folderMessages.count };
+        return { messages: result, total };
     }
     async getMessage(id) {
         if (!this.db)
@@ -439,7 +407,6 @@ class DatabaseService {
       ORDER BY date ASC
     `);
         const rawResult = stmt.all(threadId);
-        console.log('DatabaseService: getMessagesByThreadId result:', rawResult.length, 'messages for thread:', threadId);
         // Convert date strings to Date objects and boolean fields
         const result = rawResult.map(row => ({
             ...row,
@@ -462,24 +429,17 @@ class DatabaseService {
         // Check if message already exists
         const existingMessage = await this.getMessageByUid(message.accountId, message.uid);
         if (existingMessage) {
-            console.log('DatabaseService: Message already exists, skipping:', message.uid);
             return existingMessage;
         }
         const stmt = this.db.prepare(`
       INSERT INTO messages (account_id, folder_id, uid, thread_id, subject, sender, recipients, cc, bcc, body, html_body, date, is_read, is_flagged, is_answered, is_forwarded, size)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-        // Convert boolean fields to numbers BEFORE creating params array
+        // Convert boolean fields to numbers
         const isRead = message.isRead ? 1 : 0;
         const isFlagged = message.isFlagged ? 1 : 0;
         const isAnswered = message.isAnswered ? 1 : 0;
         const isForwarded = message.isForwarded ? 1 : 0;
-        console.log('DatabaseService: Boolean conversion:', {
-            isRead: { original: message.isRead, converted: isRead },
-            isFlagged: { original: message.isFlagged, converted: isFlagged },
-            isAnswered: { original: message.isAnswered, converted: isAnswered },
-            isForwarded: { original: message.isForwarded, converted: isForwarded }
-        });
         const params = [
             message.accountId,
             message.folderId,
@@ -499,18 +459,6 @@ class DatabaseService {
             isForwarded,
             message.size
         ];
-        // Debug: Log parameter types
-        console.log('DatabaseService: Parameter types:', params.map((param, index) => ({
-            index,
-            value: param,
-            type: typeof param,
-            constructor: param?.constructor?.name,
-            isNull: param === null,
-            isUndefined: param === undefined,
-            isObject: typeof param === 'object' && param !== null,
-            isArray: Array.isArray(param)
-        })));
-        console.log('DatabaseService: SQLite parameters types:', params.map((param, index) => `${index}: ${typeof param} = ${param}`));
         const result = stmt.run(...params);
         // Get the inserted message
         const insertedMessage = await this.getMessage(result.lastInsertRowid);
@@ -535,31 +483,100 @@ class DatabaseService {
     async searchMessages(query, folderId, limit = 50) {
         if (!this.db)
             throw new Error('Database not initialized');
-        // Clean and escape the search query for FTS5
-        const cleanQuery = query.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        if (!cleanQuery) {
+        // Parse advanced search query
+        const searchConditions = this.parseSearchQuery(query);
+        if (searchConditions.length === 0 && !query.trim()) {
             return [];
         }
-        console.log('DatabaseService: Searching for query:', cleanQuery, 'in folder:', folderId);
-        // Use a simpler LIKE-based search instead of FTS5 for now
-        let sql = `
-      SELECT * FROM messages 
-      WHERE (subject LIKE ? OR sender LIKE ? OR body LIKE ? OR recipients LIKE ?)
-    `;
-        const searchTerm = `%${cleanQuery}%`;
-        const params = [searchTerm, searchTerm, searchTerm, searchTerm];
+        let sql = 'SELECT * FROM messages WHERE 1=1';
+        const params = [];
+        // Add search conditions
+        if (searchConditions.length > 0) {
+            for (const condition of searchConditions) {
+                sql += ` AND ${condition.sql}`;
+                params.push(...condition.params);
+            }
+        }
+        else {
+            // Fallback to basic search
+            const cleanQuery = query.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            if (cleanQuery) {
+                const searchTerm = `%${cleanQuery}%`;
+                sql += ' AND (subject LIKE ? OR sender LIKE ? OR body LIKE ? OR recipients LIKE ?)';
+                params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+            }
+        }
         if (folderId) {
             sql += ' AND folder_id = ?';
             params.push(folderId);
         }
         sql += ' ORDER BY date DESC LIMIT ?';
         params.push(limit);
-        console.log('DatabaseService: Search SQL:', sql);
-        console.log('DatabaseService: Search params:', params);
         const stmt = this.db.prepare(sql);
         const results = stmt.all(...params);
-        console.log('DatabaseService: Search results:', results.length, 'emails found');
         return results;
+    }
+    parseSearchQuery(query) {
+        const conditions = [];
+        // Parse subject filter
+        const subjectMatch = query.match(/subject:"([^"]+)"/);
+        if (subjectMatch) {
+            conditions.push({
+                sql: 'subject LIKE ?',
+                params: [`%${subjectMatch[1]}%`]
+            });
+        }
+        // Parse from filter
+        const fromMatch = query.match(/from:"([^"]+)"/);
+        if (fromMatch) {
+            conditions.push({
+                sql: 'sender LIKE ?',
+                params: [`%${fromMatch[1]}%`]
+            });
+        }
+        // Parse read status
+        if (query.includes('is:read')) {
+            conditions.push({
+                sql: 'is_read = 1',
+                params: []
+            });
+        }
+        else if (query.includes('is:unread')) {
+            conditions.push({
+                sql: 'is_read = 0',
+                params: []
+            });
+        }
+        // Parse flagged status
+        if (query.includes('is:flagged')) {
+            conditions.push({
+                sql: 'is_flagged = 1',
+                params: []
+            });
+        }
+        // Parse attachment filter
+        if (query.includes('has:attachment')) {
+            conditions.push({
+                sql: 'has_attachments = 1',
+                params: []
+            });
+        }
+        // Parse date filters
+        const afterMatch = query.match(/after:(\d{4}-\d{2}-\d{2})/);
+        if (afterMatch) {
+            conditions.push({
+                sql: 'date >= ?',
+                params: [afterMatch[1]]
+            });
+        }
+        const beforeMatch = query.match(/before:(\d{4}-\d{2}-\d{2})/);
+        if (beforeMatch) {
+            conditions.push({
+                sql: 'date <= ?',
+                params: [beforeMatch[1]]
+            });
+        }
+        return conditions;
     }
     // Cleanup
     close() {
